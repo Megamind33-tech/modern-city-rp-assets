@@ -452,6 +452,97 @@
     "author": "Quaternius",
     "optimization": "fingers merged (65->23 bones); decimated; palette regions from bone weights; head x1.1; AO->COLOR_0"
    }
+  },
+  {
+   "id": "lamp_post",
+   "category": "props",
+   "batch": "C",
+   "generator": "lamp_post",
+   "params": {},
+   "purpose": "Heritage street lamp (Light node emissive)"
+  },
+  {
+   "id": "bench",
+   "category": "props",
+   "batch": "C",
+   "generator": "bench",
+   "params": {},
+   "purpose": "Park bench 1.8 m"
+  },
+  {
+   "id": "bin",
+   "category": "props",
+   "batch": "C",
+   "generator": "litter_bin",
+   "params": {},
+   "purpose": "Litter bin"
+  },
+  {
+   "id": "flower_tub",
+   "category": "props",
+   "batch": "C",
+   "generator": "flower_tub",
+   "params": {},
+   "purpose": "Half-barrel flower tub",
+   "hard_surface": false
+  },
+  {
+   "id": "fence_section",
+   "category": "props",
+   "batch": "C",
+   "generator": "fence_section",
+   "params": {},
+   "purpose": "White picket fence, 2.0 m along X"
+  },
+  {
+   "id": "utility_pole",
+   "category": "props",
+   "batch": "C",
+   "generator": "utility_pole",
+   "params": {},
+   "purpose": "Wooden utility pole with crossarm (8 m)"
+  },
+  {
+   "id": "mailbox",
+   "category": "props",
+   "batch": "C",
+   "generator": "mailbox",
+   "params": {},
+   "purpose": "Pillar post box"
+  },
+  {
+   "id": "road_barrier",
+   "category": "props",
+   "batch": "C",
+   "generator": "road_barrier",
+   "params": {},
+   "purpose": "Road barrier 2.0 m along X, red/white, amber lamp (Light node)"
+  },
+  {
+   "id": "station_board",
+   "category": "props",
+   "batch": "C",
+   "generator": "station_board",
+   "params": {},
+   "purpose": "Station community / job board (interactable)"
+  },
+  {
+   "id": "resident_car",
+   "category": "vehicles",
+   "batch": "C",
+   "generator": "resident_car",
+   "params": {},
+   "purpose": "Residents' hatchback (front -Z)",
+   "budget": 4000
+  },
+  {
+   "id": "radio_handset",
+   "category": "props",
+   "batch": "C",
+   "generator": "radio_handset",
+   "params": {},
+   "purpose": "Crew radio handset (~0.2 m, oversized)",
+   "bevel": 0.004
   }
  ]
 }

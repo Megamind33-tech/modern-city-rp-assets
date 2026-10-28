@@ -386,7 +386,7 @@ def build(spec):
     for m in hair_obs:
         m.data.calc_loop_triangles()
         used += len(m.data.loop_triangles)
-    cut_reserve = 420 if look.get("hivis") else 160
+    cut_reserve = 950 if look.get("hivis") else 160
     decimate_to(body, int(budget * 0.97) - used - head_extra - cut_reserve)
     pelvis_z = (arm.matrix_world @ arm.data.bones["pelvis"].head_local).z
     rest_h = max((arm.matrix_world @ v.co).z for v in body.data.vertices)

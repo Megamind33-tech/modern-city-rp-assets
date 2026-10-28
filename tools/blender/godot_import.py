@@ -16,6 +16,24 @@ SUB = ('_subresources={\n"materials": {\n'
 SET = {"gltf/embedded_image_handling": "0", "meshes/ensure_tangents": "false"}
 
 
+LOOP = None
+
+
+def anim_block(glb):
+    """loop_mode=1 for looping character clips (names from the build report)"""
+    rep = os.path.join(ROOT, "tools", "blender", "build", os.path.splitext(os.path.basename(glb))[0] + ".json")
+    if not os.path.exists(rep):
+        return ""
+    clips = json.load(open(rep)).get("animations", [])
+    if not clips:
+        return ""
+    import sys
+    sys.path.insert(0, os.path.join(ROOT, "tools", "blender"))
+    loops = {"idle", "walk", "run", "carry_walk", "work", "wave", "cheer", "sad", "talk", "phone", "kneel_work", "chop"}
+    items = ",\n".join('"%s": {\n"settings/loop_mode": %d\n}' % (c, 1 if c in loops else 0) for c in clips)
+    return ',\n"animations": {\n' + items + "\n}"
+
+
 def patch(path):
     if not os.path.exists(path):
         open(path, "w").write('[remap]\n\nimporter="scene"\nimporter_version=1\ntype="PackedScene"\n\n[params]\n\n')
@@ -27,7 +45,11 @@ def patch(path):
             s = re.sub("^" + re.escape(k) + "=.*$", k + "=" + v, s, flags=re.M)
         else:
             s = s.rstrip("\n") + "\n" + k + "=" + v + "\n"
-    s = s.rstrip("\n") + "\n" + SUB + "\n"
+    sub = SUB
+    ab = anim_block(path[:-len(".import")])
+    if ab:
+        sub = SUB[:-2] + ab + "\n}"
+    s = s.rstrip("\n") + "\n" + sub + "\n"
     open(path, "w").write(s)
 
 

@@ -577,3 +577,200 @@ def rescue_truck():
     b.box_mm("LightR", (0.06, 2.48, 2.68), (0.82, 2.82, 2.82), "emissive_blue")
     b.box_mm(B, (-0.06, 2.5, 2.68), (0.06, 2.8, 2.78), "navy")
     return b.finish()
+
+
+# =============================================================== Batch C street props
+@gen
+def lamp_post():
+    b = Builder()
+    N = "Body"
+    b.cyl(N, 0.2, 0.5, (0, 0, 0.25), "navy", segs=8, r2=0.14)
+    b.cyl(N, 0.085, 4.2, (0, 0, 2.6), "navy", segs=8, r2=0.07)
+    b.cyl(N, 0.11, 0.12, (0, 0, 1.2), "amber", segs=8)  # decorative collar
+    b.cyl(N, 0.09, 0.2, (0, 0, 4.75), "navy", segs=8)
+    # lantern: base plate, glass (emissive node), cap
+    b.cyl(N, 0.22, 0.08, (0, 0, 4.9), "navy", segs=4, rot=(0, 0, 45))
+    b.cyl("Light", 0.2, 0.5, (0, 0, 5.19), "emissive_amber", segs=4, r2=0.26, rot=(0, 0, 45))
+    b.cyl(N, 0.34, 0.24, (0, 0, 5.56), "navy", segs=4, r2=0.06, rot=(0, 0, 45))
+    b.cyl(N, 0.04, 0.12, (0, 0, 5.72), "navy", segs=6)
+    return b.finish()
+
+
+@gen
+def bench():
+    b = Builder()
+    N = "Body"
+    L = 1.8
+    for x in (-0.75, 0.75):  # cast frames
+        b.box_mm(N, (x - 0.05, -0.25, 0.0), (x + 0.05, -0.17, 0.45), "navy")
+        b.box_mm(N, (x - 0.05, 0.17, 0.0), (x + 0.05, 0.25, 0.45), "navy")
+        b.box_mm(N, (x - 0.05, -0.27, 0.4), (x + 0.05, 0.27, 0.47), "navy")
+        b.box(N, (0.1, 0.07, 0.55), (x, -0.27, 0.72), "navy", rot=(-12, 0, 0))
+        b.box_mm(N, (x - 0.05, -0.05, 0.6), (x + 0.05, 0.3, 0.66), "navy")  # armrest
+    for k, y in enumerate((-0.17, -0.02, 0.13)):
+        b.box_mm(N, (-L / 2, y - 0.065, 0.47), (L / 2, y + 0.065, 0.52), "light_wood")
+    for z in (0.62, 0.8):
+        b.box(N, (L, 0.04, 0.12), (0, -0.3 + (z - 0.62) * -0.2, z), "light_wood", rot=(-12, 0, 0))
+    return b.finish()
+
+
+@gen
+def litter_bin():
+    b = Builder()
+    N = "Body"
+    b.cyl(N, 0.26, 0.85, (0, 0, 0.43), "door_green", segs=10, r2=0.28)
+    b.cyl(N, 0.3, 0.06, (0, 0, 0.88), "door_green", segs=10)
+    b.cyl(N, 0.22, 0.14, (0, 0, 0.97), "door_green", segs=10, r2=0.12)
+    b.cyl(N, 0.285, 0.07, (0, 0, 0.6), "amber", segs=10)  # band
+    b.box_mm(N, (-0.12, 0.2, 0.84), (0.12, 0.32, 0.9), "tyre")  # slot at front
+    return b.finish()
+
+
+@gen
+def flower_tub(seed=31):
+    b = Builder(seed)
+    rng = random.Random(seed)
+    N = "Body"
+    b.cyl(N, 0.45, 0.5, (0, 0, 0.25), "dark_wood", segs=10, r2=0.5)
+    for z in (0.12, 0.38):
+        b.cyl(N, 0.47 + (z - 0.12) * 0.15, 0.05, (0, 0, z), "slate", segs=10)
+    b.cyl(N, 0.46, 0.04, (0, 0, 0.5), "soil", segs=10)
+    for k in range(4):
+        a = k * math.pi / 2 + 0.4
+        b.sphere(N, 0.2, (math.cos(a) * 0.22, math.sin(a) * 0.22, 0.6), "leaf", subdiv=1, jitter=0.03)
+    for k in range(7):
+        a = rng.uniform(0, math.tau)
+        r = rng.uniform(0.05, 0.33)
+        b.sphere(N, 0.08, (math.cos(a) * r, math.sin(a) * r, 0.72 + rng.uniform(0, 0.08)),
+                 ("flower_pink", "flower_yellow", "line_white")[k % 3], subdiv=1)
+    return b.finish()
+
+
+@gen
+def fence_section():
+    b = Builder()
+    N = "Body"
+    L = 2.0
+    for x in (-0.95, 0.95):
+        b.box_mm(N, (x - 0.05, -0.05, 0), (x + 0.05, 0.05, 1.05), "plaster")
+        b.cyl(N, 0.07, 0.06, (x, 0, 1.08), "plaster", segs=4, r2=0.01, rot=(0, 0, 45))
+    for z in (0.25, 0.75):
+        b.box_mm(N, (-L / 2, -0.06, z - 0.04), (L / 2, -0.02, z + 0.04), "plaster")
+    n = 9
+    for i in range(n):
+        x = -0.8 + i * 1.6 / (n - 1)
+        b.box_mm(N, (x - 0.045, 0.0, 0.05), (x + 0.045, 0.03, 0.88), "plaster")
+        b.poly(N, [(x - 0.045, 0.0, 0.88), (x + 0.045, 0.0, 0.88), (x, 0.0, 0.96), (x - 0.045, 0.03, 0.88), (x + 0.045, 0.03, 0.88), (x, 0.03, 0.96)],
+               [[0, 1, 2], [3, 5, 4], [0, 3, 4, 1], [1, 4, 5, 2], [2, 5, 3, 0]], "plaster")
+    return b.finish()
+
+
+@gen
+def utility_pole():
+    b = Builder()
+    N = "Body"
+    b.cyl(N, 0.15, 8.0, (0, 0, 4.0), "dark_wood", segs=7, r2=0.11)
+    b.box_mm(N, (-1.0, -0.06, 7.3), (1.0, 0.06, 7.45), "dark_wood")
+    b.box(N, (0.06, 0.06, 1.2), (-0.5, 0, 7.0), "dark_wood", rot=(0, -40, 0))
+    b.box(N, (0.06, 0.06, 1.2), (0.5, 0, 7.0), "dark_wood", rot=(0, 40, 0))
+    for x in (-0.85, -0.3, 0.3, 0.85):
+        b.cyl(N, 0.05, 0.18, (x, 0, 7.54), "steel", segs=6, r2=0.03)
+    b.cyl(N, 0.22, 0.6, (0, -0.32, 6.0), "concrete", segs=8)  # transformer can
+    b.box_mm(N, (-0.04, -0.2, 5.9), (0.04, -0.1, 6.1), "slate")
+    b.box_mm(N, (-0.12, 0.13, 2.0), (0.12, 0.15, 2.25), "line_yellow")  # warning plate
+    for z in range(3, 7):
+        b.box_mm(N, (-0.02, -0.18, z * 0.8), (0.02, 0.18, z * 0.8 + 0.03), "steel")  # climbing steps
+    return b.finish()
+
+
+@gen
+def mailbox():
+    b = Builder()
+    N = "Body"
+    b.cyl(N, 0.28, 0.12, (0, 0, 0.06), "tyre", segs=12)
+    b.cyl(N, 0.25, 1.2, (0, 0, 0.72), "red_dark", segs=12)
+    b.cyl(N, 0.29, 0.08, (0, 0, 1.33), "red_dark", segs=12)
+    b.sphere(N, 0.27, (0, 0, 1.37), "red_dark", subdiv=2, scale=(1, 1, 0.55), flat_bottom=1.37)
+    b.box_mm(N, (-0.16, 0.22, 1.08), (0.16, 0.27, 1.14), "tyre")  # slot (front)
+    b.box_mm(N, (-0.1, 0.235, 0.78), (0.1, 0.26, 0.92), "cream")  # collection plate
+    return b.finish()
+
+
+@gen
+def road_barrier():
+    b = Builder()
+    N = "Body"
+    L = 2.0
+    for x in (-0.85, 0.85):
+        b.box_mm(N, (x - 0.04, -0.04, 0.0), (x + 0.04, 0.04, 1.0), "line_white")
+        b.box_mm(N, (x - 0.12, -0.32, 0.0), (x + 0.12, 0.32, 0.08), "tyre")  # feet
+    n = 8
+    for i in range(n):
+        x0 = -L / 2 + i * L / n
+        b.box_mm(N, (x0, 0.04, 0.72), (x0 + L / n, 0.08, 0.92), "warning_red" if i % 2 == 0 else "line_white")
+        b.box_mm(N, (x0, 0.04, 0.32), (x0 + L / n, 0.08, 0.44), "line_white" if i % 2 == 0 else "warning_red")
+    b.box_mm(N, (-0.07, -0.03, 0.92), (0.07, 0.07, 1.04), "tyre")
+    b.cyl("Light", 0.07, 0.1, (0, 0.02, 1.1), "emissive_amber", segs=8)
+    return b.finish()
+
+
+@gen
+def station_board():
+    """community/job board by the station: navy frame, cream board, pinned notes, little roof"""
+    b = Builder()
+    N = "Body"
+    for x in (-0.85, 0.85):
+        b.box_mm(N, (x - 0.06, -0.06, 0), (x + 0.06, 0.06, 2.1), "navy")
+    b.box_mm(N, (-0.85, -0.04, 0.85), (0.85, 0.04, 1.95), "navy")
+    b.box_mm(N, (-0.78, 0.04, 0.92), (0.78, 0.07, 1.88), "cream")
+    notes = [(-0.55, 1.6, "line_white"), (-0.15, 1.65, "butter"), (0.35, 1.55, "pale_blue"), (-0.45, 1.15, "peach"), (0.1, 1.2, "line_white"), (0.55, 1.15, "sage")]
+    for x, z, col in notes:
+        b.box_mm(N, (x - 0.15, 0.07, z - 0.18), (x + 0.15, 0.09, z + 0.18), col)
+        b.box_mm(N, (x - 0.02, 0.09, z + 0.12), (x + 0.02, 0.11, z + 0.16), "signal_red")
+    b.box_mm(N, (-0.78, 0.07, 1.76), (0.78, 0.1, 1.88), "signal_red")  # header strip
+    b.box(N, (1.95, 0.5, 0.06), (0, 0.1, 2.12), "slate", rot=(-15, 0, 0))
+    return b.finish()
+
+
+@gen
+def resident_car(color="denim"):
+    b = Builder()
+    B = "Body"
+    WR = 0.32
+    for y in (1.25, -1.2):
+        for sx in (-1, 1):
+            b.cyl(B, WR, 0.22, (sx * 0.76, y, WR), "tyre", segs=12, rot=(0, 90, 0))
+            b.cyl(B, 0.17, 0.03, (sx * 0.875, y, WR), "steel", segs=8, rot=(0, 90, 0))
+    b.box_mm(B, (-0.85, -1.9, 0.3), (0.85, 1.95, 0.85), color)  # lower body
+    b.box_mm(B, (-0.86, -1.9, 0.3), (0.86, 1.95, 0.4), "slate")  # sill
+    # cabin (tapered with poly)
+    z0, z1 = 0.85, 1.45
+    cab = [(-0.8, -1.75, z0), (0.8, -1.75, z0), (0.8, 0.75, z0), (-0.8, 0.75, z0),
+           (-0.68, -1.55, z1), (0.68, -1.55, z1), (0.68, 0.1, z1), (-0.68, 0.1, z1)]
+    b.poly(B, cab, [[0, 1, 2, 3], [4, 7, 6, 5], [0, 4, 5, 1], [1, 5, 6, 2], [2, 6, 7, 3], [3, 7, 4, 0]], "glass",
+           face_pals=[color, color, "glass", "glass", "glass", "glass"])
+    b.box_mm(B, (-0.7, -1.45, z1 - 0.01), (0.7, -0.05, z1 + 0.05), color)  # roof
+    for sx in (-1, 1):
+        b.box_mm(B, (sx * 0.81 - 0.03, -0.45, 0.85), (sx * 0.81 + 0.03, -0.35, 1.4), color)  # B pillar
+        b.box_mm(B, (sx * 0.62 - 0.14, 1.95, 0.62), (sx * 0.62 + 0.14, 1.98, 0.75), "line_white")
+        b.box_mm(B, (sx * 0.62 - 0.14, -1.93, 0.62), (sx * 0.62 + 0.14, -1.9, 0.75), "warning_red")
+        b.box_mm(B, (sx * 0.85, 0.55, 0.95), (sx * 0.98, 0.65, 1.05), color)  # mirror
+    b.box_mm(B, (-0.88, 1.95, 0.3), (0.88, 2.05, 0.48), "slate")
+    b.box_mm(B, (-0.88, -2.0, 0.3), (0.88, -1.9, 0.48), "slate")
+    b.box_mm(B, (-0.25, 1.95, 0.5), (0.25, 1.99, 0.62), "tyre")  # grille
+    b.box_mm(B, (-0.2, -1.94, 0.45), (0.2, -1.9, 0.55), "line_yellow")  # plate
+    return b.finish()
+
+
+@gen
+def radio_handset():
+    b = Builder()
+    N = "Body"
+    b.box_mm(N, (-0.035, -0.022, 0.0), (0.035, 0.022, 0.15), "tyre")
+    b.box_mm(N, (-0.026, 0.022, 0.085), (0.026, 0.026, 0.125), "glass")  # display (front)
+    for i in range(3):
+        b.box_mm(N, (-0.022 + i * 0.016, 0.022, 0.03), (-0.012 + i * 0.016, 0.026, 0.07), "steel")
+    b.cyl(N, 0.008, 0.11, (0.02, 0.0, 0.205), "tyre", segs=6)  # antenna
+    b.cyl(N, 0.011, 0.02, (-0.018, 0.0, 0.16), "amber", segs=6)  # channel knob
+    b.box_mm(N, (-0.04, -0.01, 0.06), (-0.035, 0.012, 0.11), "amber")  # PTT
+    return b.finish()

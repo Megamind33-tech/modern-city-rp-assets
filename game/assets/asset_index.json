@@ -260,6 +260,393 @@
     "LightR"
    ],
    "animations": []
+  },
+  "crew_player": {
+   "path": "res://assets/characters/crew_player.glb",
+   "category": "characters",
+   "tris": 4714,
+   "size_m": [
+    1.819,
+    1.788,
+    0.277
+   ],
+   "nodes": [
+    "Armature",
+    "Body"
+   ],
+   "animations": [
+    "idle",
+    "walk",
+    "run",
+    "carry_walk",
+    "work",
+    "interact",
+    "wave",
+    "cheer",
+    "sad",
+    "pickup",
+    "talk",
+    "phone",
+    "kneel_work",
+    "chop"
+   ],
+   "rig": "Quaternius UE-style humanoid, 23 bones",
+   "skeleton": "Armature",
+   "bones": 23
+  },
+  "crew_theo": {
+   "path": "res://assets/characters/crew_theo.glb",
+   "category": "characters",
+   "tris": 4571,
+   "size_m": [
+    1.819,
+    1.818,
+    0.3
+   ],
+   "nodes": [
+    "Armature",
+    "Body"
+   ],
+   "animations": [
+    "idle",
+    "walk",
+    "run",
+    "carry_walk",
+    "work",
+    "interact",
+    "wave",
+    "cheer",
+    "sad",
+    "pickup",
+    "talk",
+    "phone",
+    "kneel_work",
+    "chop"
+   ],
+   "rig": "Quaternius UE-style humanoid, 23 bones",
+   "skeleton": "Armature",
+   "bones": 23
+  },
+  "crew_maren": {
+   "path": "res://assets/characters/crew_maren.glb",
+   "category": "characters",
+   "tris": 4573,
+   "size_m": [
+    1.642,
+    1.807,
+    0.354
+   ],
+   "nodes": [
+    "Armature",
+    "Body"
+   ],
+   "animations": [
+    "idle",
+    "walk",
+    "run",
+    "carry_walk",
+    "work",
+    "interact",
+    "wave",
+    "cheer",
+    "sad",
+    "pickup",
+    "talk",
+    "phone",
+    "kneel_work",
+    "chop"
+   ],
+   "rig": "Quaternius UE-style humanoid, 23 bones",
+   "skeleton": "Armature",
+   "bones": 23
+  },
+  "crew_priya": {
+   "path": "res://assets/characters/crew_priya.glb",
+   "category": "characters",
+   "tris": 4727,
+   "size_m": [
+    1.604,
+    1.698,
+    0.283
+   ],
+   "nodes": [
+    "Armature",
+    "Body"
+   ],
+   "animations": [
+    "idle",
+    "walk",
+    "run",
+    "carry_walk",
+    "work",
+    "interact",
+    "wave",
+    "cheer",
+    "sad",
+    "pickup",
+    "talk",
+    "phone",
+    "kneel_work",
+    "chop"
+   ],
+   "rig": "Quaternius UE-style humanoid, 23 bones",
+   "skeleton": "Armature",
+   "bones": 23
+  },
+  "resident_rosa": {
+   "path": "res://assets/characters/resident_rosa.glb",
+   "category": "characters",
+   "tris": 2914,
+   "size_m": [
+    1.543,
+    1.652,
+    0.274
+   ],
+   "nodes": [
+    "Armature",
+    "Body"
+   ],
+   "animations": [
+    "idle",
+    "walk",
+    "run",
+    "carry_walk",
+    "work",
+    "interact",
+    "wave",
+    "cheer",
+    "sad",
+    "pickup",
+    "talk",
+    "phone",
+    "kneel_work",
+    "chop"
+   ],
+   "rig": "Quaternius UE-style humanoid, 23 bones",
+   "skeleton": "Armature",
+   "bones": 23
+  },
+  "resident_tomas": {
+   "path": "res://assets/characters/resident_tomas.glb",
+   "category": "characters",
+   "tris": 2898,
+   "size_m": [
+    1.268,
+    1.259,
+    0.211
+   ],
+   "nodes": [
+    "Armature",
+    "Body"
+   ],
+   "animations": [
+    "idle",
+    "walk",
+    "run",
+    "carry_walk",
+    "work",
+    "interact",
+    "wave",
+    "cheer",
+    "sad",
+    "pickup",
+    "talk",
+    "phone",
+    "kneel_work",
+    "chop"
+   ],
+   "rig": "Quaternius UE-style humanoid, 23 bones",
+   "skeleton": "Armature",
+   "bones": 23
+  },
+  "resident_arthur": {
+   "path": "res://assets/characters/resident_arthur.glb",
+   "category": "characters",
+   "tris": 2902,
+   "size_m": [
+    1.81,
+    1.777,
+    0.277
+   ],
+   "nodes": [
+    "Armature",
+    "Body"
+   ],
+   "animations": [
+    "idle",
+    "walk",
+    "run",
+    "carry_walk",
+    "work",
+    "interact",
+    "wave",
+    "cheer",
+    "sad",
+    "pickup",
+    "talk",
+    "phone",
+    "kneel_work",
+    "chop"
+   ],
+   "rig": "Quaternius UE-style humanoid, 23 bones",
+   "skeleton": "Armature",
+   "bones": 23
+  },
+  "lamp_post": {
+   "path": "res://assets/props/lamp_post.glb",
+   "category": "props",
+   "tris": 568,
+   "size_m": [
+    0.455,
+    5.78,
+    0.455
+   ],
+   "nodes": [
+    "Body",
+    "Light"
+   ],
+   "animations": []
+  },
+  "bench": {
+   "path": "res://assets/props/bench.glb",
+   "category": "props",
+   "tris": 660,
+   "size_m": [
+    1.8,
+    0.992,
+    0.664
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "bin": {
+   "path": "res://assets/props/bin.glb",
+   "category": "props",
+   "tris": 348,
+   "size_m": [
+    0.571,
+    1.035,
+    0.62
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "flower_tub": {
+   "path": "res://assets/props/flower_tub.glb",
+   "category": "props",
+   "tris": 364,
+   "size_m": [
+    0.968,
+    0.833,
+    1.018
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "fence_section": {
+   "path": "res://assets/props/fence_section.glb",
+   "category": "props",
+   "tris": 750,
+   "size_m": [
+    2.0,
+    1.11,
+    0.11
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "utility_pole": {
+   "path": "res://assets/props/utility_pole.glb",
+   "category": "props",
+   "tris": 240,
+   "size_m": [
+    2.0,
+    8.0,
+    0.72
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "mailbox": {
+   "path": "res://assets/props/mailbox.glb",
+   "category": "props",
+   "tris": 464,
+   "size_m": [
+    0.58,
+    1.518,
+    0.58
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "road_barrier": {
+   "path": "res://assets/props/road_barrier.glb",
+   "category": "props",
+   "tris": 708,
+   "size_m": [
+    2.0,
+    1.15,
+    0.64
+   ],
+   "nodes": [
+    "Body",
+    "Light"
+   ],
+   "animations": []
+  },
+  "station_board": {
+   "path": "res://assets/props/station_board.glb",
+   "category": "props",
+   "tris": 792,
+   "size_m": [
+    1.95,
+    2.211,
+    0.493
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "resident_car": {
+   "path": "res://assets/vehicles/resident_car.glb",
+   "category": "vehicles",
+   "tris": 1440,
+   "size_m": [
+    1.96,
+    1.5,
+    4.05
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "radio_handset": {
+   "path": "res://assets/props/radio_handset.glb",
+   "category": "props",
+   "tris": 400,
+   "size_m": [
+    0.075,
+    0.26,
+    0.048
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
   }
  },
  "notes": {
