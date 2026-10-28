@@ -170,13 +170,13 @@ func _lane_houses(loc_id: String, x: float, anchor_z: float, house_id: String) -
 	var i := 0
 	for z in range(12, int(LANE_LEN), 15):
 		for side in [-1, 1]:
-			var pos := Vector3(x + side * 12.0, 0, float(z))
+			var pos := Vector3(x + side * 13.0, 0, float(z))
 			if side == 1 and absf(z - anchor_z) < 8:
 				continue  # the incident house is placed explicitly below
 			_house(self, pos, side * PI / 2, palette[i % palette.size()], "", i + int(x))
 			i += 1
 	# Incident house sits on the +x side, its garden oak is what falls.
-	_house(self, Vector3(x + 12.5, 0, anchor_z + 3.0), PI / 2, Color(0.97, 0.80, 0.55), house_id, 0 if loc_id == "alder_lane" else 2)
+	_house(self, Vector3(x + 13.0, 0, anchor_z + 3.0), PI / 2, Color(0.97, 0.80, 0.55), house_id, 0 if loc_id == "alder_lane" else 2)
 	var pile := Node3D.new()
 	pile.name = "LogPile_" + loc_id
 	add_child(pile)
