@@ -51,3 +51,17 @@ Newest entries at the bottom. Each entry: what changed, why, evidence.
 - Art cut on-scene draw calls 267 → 155 and station 142 → 88 (fewer, merged meshes). On-scene primitives rose 20k → 71k: still well under the 150k budget.
 - Review fixes: lane houses moved back 1 m so the deeper house models don't crowd the log-pile verge; Theo's "Saw's all yours" line now only plays at tree incidents.
 - Still placeholder: characters (capsules) until Batch B lands; ground and roads are flat palette-coloured primitives.
+
+## Day 1 · 14:00 — Director feedback: "lazy lighting, play-once game"
+**Lighting.** Moved lighting into `gameplay/lighting.gd` with art-directed moods: *clear* (low warm key, cool shadowless fill from the opposite side, golden horizon), *rain*, and *storm*. They use AgX tonemapping, a small contrast/saturation grade, gentle glow and aerial fog. Weather cross-fades between moods over 2.5 s. Everything is Mobile-renderer safe; Low quality drops glow and shadows.
+
+**Retention loops** (fair: no forced waits, no pay-to-skip):
+1. *Mastery.* Every call scores 0–100: job done 50, pace against a visible par time 25, scene safety 15, technique 10 (saw stalls and missed pump pulls count as faults). That earns a gold, silver or bronze medal, and personal bests per incident type are shown when beaten.
+2. *Shift loop.* Shifts now hold 2–4 calls depending on rank. 3 seeded shift goals a day (e.g. "Clear a tree without stalling the saw", "Let Theo secure a scene") pay cash + XP. Impossible goals are filtered out using which incidents can actually occur.
+3. *Meta loop.* Station XP → 5 ranks (Probationary Station → Pride of the Valley). Ranks raise calls per shift and unlock upgrades that change how play feels: cone trailer (faster cones, faster Theo), pump rebuild (+30% pumping, wider pull window), station kitchen (crew morale), professional chain (needs the serviced saw), Theo's safety course. Locked upgrades show on the board with what unlocks them, so there is always a visible next target.
+4. *Streaks.* Consecutive clean calls add +5% funding per call (cap +25%); a failure or unsafe cut resets the streak.
+- New UI: rank chip with XP bar and streak counter; a "Par m:ss" target in the timer; a two-column results screen (performance/medal/goals/XP | funding); a two-column station board (record, bests, crew | upgrades + locked targets); shift goals listed at the station.
+- Evidence: 29/29 unit tests (8 new: grading, ranks, XP/best/rank-up, streak, calls-per-shift limit, seeded and achievable goals, rank-gated unlocks, save round-trip).
+
+**Characters (Batch B) integrated.** 7 rigged characters (Quaternius CC0 base, 23 bones, 2.9–4.7k tris, one draw call each) with shared clips. The player walks, carries and works; Theo runs to cone points and kneels to place them; Rosa talks at the flood; Tomás holds his torch. Maren and Priya now live at the station between calls (talking by the board, working in the bay).
+- Feedback sent to the asset hand: Tomás must read as a child, residents need shoes, crew need boots and turnout jackets.

@@ -237,8 +237,10 @@ def bake_ao(meshes, spec, size):
     dist = spec.get("ao_distance", max(0.15, min(1.2, max(size) * 0.2)))
     sc.world.light_settings.distance = dist
     # ground plane so contact areas darken (removed afterwards)
-    bpy.ops.mesh.primitive_plane_add(size=max(size) * 4 + 4, location=(0, 0, -0.001))
-    ground = bpy.context.active_object
+    ground = None
+    if spec.get("ao_ground", True):
+        bpy.ops.mesh.primitive_plane_add(size=max(size) * 4 + 4, location=(0, 0, -0.001))
+        ground = bpy.context.active_object
     strength = spec.get("ao_strength", 0.5)
     for ob in meshes:
         me = ob.data
@@ -263,7 +265,8 @@ def bake_ao(meshes, spec, size):
             c[i + 3] = 1.0
         a.data.foreach_set("color", c)
         print(f"  AO {ob.name}: min {min(c[0::4]):.2f} mean {sum(c[0::4]) / max(1, len(c) // 4):.2f}")
-    bpy.data.objects.remove(ground, do_unlink=True)
+    if ground:
+        bpy.data.objects.remove(ground, do_unlink=True)
 
 
 def export(objs, spec):

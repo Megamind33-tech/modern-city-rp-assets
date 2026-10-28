@@ -41,3 +41,47 @@ rings. bmesh icosphere `subdivisions=1` is a 20-face icosahedron in 5.2 (canopie
 Contact sheets: `docs/asset_renders/A.png`, `docs/asset_renders/A_overlays.png`.
 Validation: `godot --headless --import` clean, every glb loads, surfaces resolve to the shared materials.
 
+## 2026-10-28 — Batch B (characters) delivered
+
+**Sources (all CC0 1.0, licence files checked inside each zip, author Quaternius):**
+Universal Base Characters [Standard] (bodies + hair, https://quaternius.itch.io/universal-base-characters),
+Universal Animation Library [Standard] and Universal Animation Library 2 [Standard]
+(https://quaternius.itch.io/universal-animation-library, -2). Same 65-bone UE-style skeleton across all
+three, so clips apply by bone name with no retargeting. Downloads are scripted
+(`tools/blender/fetch_sources.sh`, free itch.io flow) into gitignored `tools/asset_sources/`.
+
+**Pipeline (`tools/blender/characters.py`).** Head x1.1 (child x1.32) and hands x1.1 baked into the mesh
+with the rest pose untouched; finger weights merged into `hand_l/r`, finger + leaf bones removed
+(65 -> 23 bones); body decimated to budget after the hair; body bisected at region lines so bands have
+straight edges; palette regions painted from dominant bone weight + height bands (skin / top / sleeves /
+bottom / shoes, crew hi-vis waist, cuff and shin bands); eyes + brows painted on the nearest
+front-facing head faces; helmet (Maren) and beanie (Theo) built procedurally and skinned to `Head`;
+everything joined into one skinned mesh `Body` (1 draw call). Height is set by the `Armature` node
+scale and the facing by a 180 deg Y rotation on the same node (source faces +Z in glTF); clips stay valid.
+
+**Clips (embedded in every character glb, identical names):** idle (UAL1 Idle_Loop), walk (Walk_Loop),
+run (Jog_Fwd_Loop), carry_walk (UAL2 Walk_Carry_Loop), work (procedural: two-handed tool held at waist,
+push/pull + buzz, built on Idle_Loop), interact (Interact), wave / cheer / sad (procedural pose-space
+layers over Idle_Loop), plus extras pickup (PickUp_Table), talk (Idle_Talking_Loop),
+phone (UAL2 Idle_TalkingPhone_Loop, usable for the radio), kneel_work (Fixing_Kneeling),
+chop (UAL2 TreeChopping_Loop). In-place (non root-motion) versions. Loop flags are set in the
+.import files (everything loops except interact and pickup).
+
+**Problems.** glTF importer leaves objects in quaternion rotation mode, so the first facing fix was
+silently ignored (characters faced away) -> set rotation_mode first. Decimated triangles made jagged
+"flame" band edges -> bisect planes before painting (~+400 tris, reserved in the budget).
+The bodies are the athletic Superhero base; with no clothing meshes in the free tier, garments are
+paint-only (skin-tight read). Good enough at gameplay distance; a clothed base would be an upgrade.
+
+**Numbers.** crew_player 4714, crew_theo 4571, crew_maren 4573, crew_priya 4727, resident_rosa 2914, resident_tomas 2898, resident_arthur 2902. Batch B total 27299 tris, 23 bones each, all within budget.
+Sheets: `docs/asset_renders/B.png` (idle pose), `docs/asset_renders/B_clips.png` (all clips, crew_player).
+
+## 2026-10-28 — Batch C (street props) delivered
+
+All procedural on the palette (same generator approach as Batch A). `lamp_post` and `road_barrier`
+carry a separate `Light` node on `palette_emissive`. `fence_section` and `road_barrier` are 2.0 m along X
+(tile them at 2 m). `resident_car` 4.05 x 1.96 x 1.5 m, front -Z, single `Body` node.
+
+**Numbers.** lamp_post 568, bench 660, bin 348, flower_tub 364, fence_section 750, utility_pole 240, mailbox 464, road_barrier 708, station_board 792, resident_car 1440, radio_handset 400. Batch C total 6734 tris, all within budget.
+Sheet: `docs/asset_renders/C.png`.
+

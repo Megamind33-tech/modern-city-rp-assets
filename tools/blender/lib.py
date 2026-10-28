@@ -29,7 +29,8 @@ def pi(c):
 class Builder:
     """Accumulates bmesh geometry per output node with a per-face palette index."""
 
-    def __init__(self, seed=1):
+    def __init__(self, seed=1, recalc=True):
+        self.recalc = recalc
         self.nodes = {}
         self.pivots = {}
         self.rng = random.Random(seed)
@@ -131,7 +132,8 @@ class Builder:
         col = bpy.context.scene.collection
         for name, b in self.nodes.items():
             bmesh.ops.remove_doubles(b, verts=b.verts, dist=1e-5)
-            bmesh.ops.recalc_face_normals(b, faces=b.faces)
+            if self.recalc:
+                bmesh.ops.recalc_face_normals(b, faces=b.faces)
             b.normal_update()
             me = bpy.data.meshes.new(name)
             b.to_mesh(me)

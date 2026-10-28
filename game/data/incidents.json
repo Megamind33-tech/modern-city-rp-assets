@@ -138,7 +138,12 @@
         "success": "{resident_name} can get the car out again. The logs are stacked on the verge.",
         "timeout": "The rest of the oak came down on {resident_name}'s roof. Highways will clear {location_name} overnight.",
         "abandoned": "You pulled the crew off {location_name}. The rest of the oak came down on {resident_name}'s roof overnight."
-      }
+      },
+      "par_seconds_by_severity": [
+        60,
+        80,
+        100
+      ]
     },
     {
       "id": "flooded_cellar",
@@ -323,7 +328,12 @@
         "success": "The cellar's dry, the boiler survived and the fuse box is safe. {resident_name} is already mopping.",
         "timeout": "The water reached the boiler before the pump could catch up. {resident_name}'s house will be cold for a week.",
         "abandoned": "You left {location_name} with the cellar still filling. The boiler is gone."
-      }
+      },
+      "par_seconds_by_severity": [
+        110,
+        130,
+        150
+      ]
     }
   ]
 }

@@ -24,7 +24,8 @@ var _index := 0
 var _work_t := 0.0
 var _decide_t := 0.0
 var _status: Label3D
-var _visual: Node3D
+var _visual: CharacterVisual
+var asset_id := "crew_theo"
 
 
 func setup(id: String, crew_name: String, work_rate: float) -> void:
@@ -44,7 +45,7 @@ func _ready() -> void:
 	# Crew don't block each other or the player; they still collide with the world.
 	collision_layer = 2
 	collision_mask = 1
-	_visual = Build.person(self, Build.C_TEAL, Color(0.55, 0.38, 0.28))
+	_visual = CharacterVisual.create(self, asset_id, Build.C_TEAL, Color(0.55, 0.38, 0.28))
 	_status = Build.label(self, "", Vector3(0, 2.3, 0), 30)
 
 
@@ -114,8 +115,10 @@ func _physics_process(dt: float) -> void:
 		var dir := to.normalized()
 		velocity = Vector3(dir.x * speed, 0, dir.z * speed)
 		_visual.rotation.y = lerp_angle(_visual.rotation.y, atan2(-dir.x, -dir.z), minf(1.0, 10.0 * dt))
+		_visual.play("run" if state == State.MOVE else "walk")
 	else:
 		velocity = Vector3.ZERO
+		_visual.play("kneel_work" if state == State.WORK else "idle")
 	move_and_slide()
 	position.y = 0.0
 

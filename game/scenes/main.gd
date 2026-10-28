@@ -23,8 +23,7 @@ var theo: CrewAgent
 var rig: CameraRig
 var hud: Hud
 var site: IncidentSite
-var sun: DirectionalLight3D
-var env: Environment
+var lighting: Lighting
 var beacon: Node3D
 var bot_input := Vector2.ZERO
 var bot_active := false
@@ -76,6 +75,7 @@ func _ready() -> void:
 	_wire_hud()
 	_make_truck_interactions()
 	_make_station_board()
+	_station_life()
 	player.blocked.connect(func(r: String) -> void: hud.show_toast(r))
 	theo.work_step_done.connect(_on_theo_step)
 	theo.task_finished.connect(_on_theo_done)
@@ -91,32 +91,9 @@ func _ready() -> void:
 
 
 func _build_environment() -> void:
-	var we := WorldEnvironment.new()
-	env = Environment.new()
-	env.background_mode = Environment.BG_SKY
-	var sky := Sky.new()
-	var sm := ProceduralSkyMaterial.new()
-	sm.sky_top_color = Color(0.36, 0.52, 0.72)
-	sm.sky_horizon_color = Color(0.86, 0.80, 0.72)
-	sm.ground_horizon_color = Color(0.70, 0.66, 0.58)
-	sm.ground_bottom_color = Color(0.30, 0.32, 0.28)
-	sky.sky_material = sm
-	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.9
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.fog_enabled = true
-	env.fog_light_color = Color(0.78, 0.80, 0.82)
-	env.fog_density = 0.004
-	we.environment = env
-	add_child(we)
-	sun = DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-52, -38, 0)
-	sun.light_color = Color(1.0, 0.93, 0.82)
-	sun.light_energy = 1.15
-	sun.directional_shadow_max_distance = 45.0
-	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
-	add_child(sun)
+	lighting = Lighting.new()
+	lighting.name = "Lighting"
+	add_child(lighting)
 
 
 func apply_quality(q: String) -> void:
@@ -124,7 +101,7 @@ func apply_quality(q: String) -> void:
 		q = "medium"
 	Game.quality = q
 	var c: Dictionary = QUALITY[q]
-	sun.shadow_enabled = c["shadows"]
+	lighting.set_quality(c["shadows"], q != "low")
 	get_viewport().scaling_3d_scale = c["scale"]
 	Engine.max_fps = c["fps"]
 	_update_weather()
@@ -134,8 +111,7 @@ func _update_weather() -> void:
 	var weather: String = model.incidents.active.get("weather", "clearing") if model else "clearing"
 	var rainy := weather != "clearing"
 	rig.set_rain(QUALITY[Game.quality]["rain"] * (2 if weather == "heavy_rain" else 1) if rainy else 0)
-	sun.light_energy = 0.7 if rainy else 1.15
-	env.fog_density = 0.012 if rainy else 0.004
+	lighting.set_mood(weather)
 
 
 # --- Model lifecycle ---------------------------------------------------------
@@ -165,7 +141,7 @@ func _on_model(m: GameModel) -> void:
 			if state == IncidentDirector.OFFERED:
 				hud.dispatch_banner.visible = true
 			else:
-				_call_t = FIRST_CALL_DELAY
+				_call_t = FIRST_CALL_DELAY if model.calls_remaining() > 0 else -1.0
 	_update_weather()
 	_next_line()
 
@@ -260,7 +236,7 @@ func _arrive() -> void:
 		_exit_truck()
 	rig.walk_yaw = PI
 	_spawn_site()
-	theo.rate = model.crew.work_rate("theo_vance", "safety")
+	theo.rate = model.crew.work_rate("theo_vance", "safety") * (1.5 if int(model.equipment.get("cones", 1)) >= 2 else 1.0)
 	Game.save_game()
 
 
@@ -290,7 +266,11 @@ func _finish_return() -> void:
 		return
 	_clear_site()
 	_update_weather()
-	hud.show_toast("Back at the station. Check the board when you're ready.")
+	if model.calls_remaining() > 0:
+		_call_t = FIRST_CALL_DELAY * 2.0
+		hud.show_toast("Back at the station. Stand by — %d more call%s this shift." % [model.calls_remaining(), "" if model.calls_remaining() == 1 else "s"])
+	else:
+		hud.show_toast("Shift's calls are done. End your shift at the board.")
 	Game.save_game()
 	_next_line()
 
@@ -337,7 +317,7 @@ func _make_truck_interactions() -> void:
 	cones.on_press = func() -> void: _cone_hold = 0.0
 	cones.on_hold = func(dt: float) -> void:
 		_cone_hold += dt
-		if _cone_hold >= 2.5:
+		if _cone_hold >= (1.2 if int(model.equipment.get("cones", 1)) >= 2 else 2.5):
 			_cone_hold = -100.0
 			site.show_all_cones()
 			model.progress_task("secure_area", {"by": "player"})
@@ -376,6 +356,21 @@ func _exit_truck_silent() -> void:
 	theo.process_mode = Node.PROCESS_MODE_INHERIT
 	rig.target = player
 	rig.mode = "walk"
+
+
+## Crew who aren't on the truck still live at the station: Maren by the board, Priya
+## working on kit in the bay. They make the base feel inhabited between calls.
+func _station_life() -> void:
+	var maren := CharacterVisual.create(self, "crew_maren", Build.C_NAVY)
+	maren.position = Vector3(-6.4, 0, -10.6)
+	maren.rotation.y = -0.6
+	maren.play("talk")
+	Build.label(maren, "Maren", Vector3(0, 2.2, 0), 26)
+	var priya := CharacterVisual.create(self, "crew_priya", Build.C_AMBER)
+	priya.position = Vector3(6.5, 0, -11.2)
+	priya.rotation.y = 2.6
+	priya.play("kneel_work")
+	Build.label(priya, "Priya", Vector3(0, 2.2, 0), 26)
 
 
 func _make_station_board() -> void:
@@ -578,10 +573,15 @@ func _flat_dist(a: Vector3, b: Vector3) -> float:
 
 
 func _refresh_hud(blocked: bool) -> void:
-	hud.set_status(model.day, model.economy.money)
+	var r := model.rank()
+	hud.set_status(model.day, model.economy.money, "R%d %s" % [int(r["rank"]), r["title"]], Progression.rank_progress(model.xp), model.streak)
 	var inst := model.incidents.active
 	var state: String = inst.get("state", "")
-	hud.set_timer(model.incidents.time_left() if state == IncidentDirector.ON_SCENE else -1.0)
+	if state == IncidentDirector.ON_SCENE:
+		var par := Progression.par_seconds(model.incidents.defs[inst["def_id"]], int(inst["severity"]))
+		hud.set_timer(model.incidents.time_left(), float(inst["elapsed"]), par)
+	else:
+		hud.set_timer(-1.0)
 	hud.set_objectives(_objective_lines())
 	hud.set_controls_visible(not blocked)
 	if blocked:
@@ -606,10 +606,15 @@ func _objective_lines() -> Array:
 	var out: Array = []
 	match inst.get("state", ""):
 		"":
-			if model.fragments.is_empty() and _call_t <= 0.0:
-				out.append({"text": "Check the station board or end your shift", "done": false})
+			if model.calls_remaining() == 0:
+				out.append({"text": "Shift complete — end it at the station board", "done": false})
 			else:
-				out.append({"text": "Stand by for calls", "done": false})
+				out.append({"text": "Stand by — %d call%s left this shift" % [model.calls_remaining(), "" if model.calls_remaining() == 1 else "s"], "done": false})
+			out.append({"text": "Today's goals", "done": false})
+			for gid in model.goals_today:
+				var g := Progression.goal(gid)
+				var done: bool = model.goals_done.has(gid)
+				out.append({"text": ("✔ " if done else "☐ ") + "%s  (£%d)" % [g["text"], int(g["reward"])], "done": done})
 		IncidentDirector.OFFERED:
 			pass
 		IncidentDirector.EN_ROUTE:

@@ -46,6 +46,9 @@ var pause_panel: PanelContainer
 var dispatch_banner: Button
 
 var _meter_label: Label
+var _rank_label: Label
+var _xp_bar: ProgressBar
+var _streak_label: Label
 var _dialogue_speaker: Label
 var _dialogue_text: Label
 var _toast_t := 0.0
@@ -62,8 +65,8 @@ func _ready() -> void:
 	add_child(root)
 	_build_hud()
 	dispatch_panel = _modal(560)
-	result_panel = _modal(560)
-	dashboard_panel = _modal(720)
+	result_panel = _modal(900)
+	dashboard_panel = _modal(1000)
 	menu_panel = _modal(520)
 	pause_panel = _modal(420)
 	_build_dialogue()
@@ -154,6 +157,24 @@ func _build_hud() -> void:
 	chip.add_child(chip_row)
 	day_label = _label(chip_row, "Day 1", 24, AMBER)
 	money_label = _label(chip_row, "£0", 24)
+	var rank_box := VBoxContainer.new()
+	rank_box.add_theme_constant_override("separation", 2)
+	chip_row.add_child(rank_box)
+	_rank_label = _label(rank_box, "", 16, Color(0.8, 0.86, 0.95))
+	_xp_bar = ProgressBar.new()
+	_xp_bar.max_value = 1.0
+	_xp_bar.show_percentage = false
+	_xp_bar.custom_minimum_size = Vector2(170, 8)
+	var xp_fill := StyleBoxFlat.new()
+	xp_fill.bg_color = TEAL
+	xp_fill.set_corner_radius_all(4)
+	_xp_bar.add_theme_stylebox_override("fill", xp_fill)
+	var xp_bg := StyleBoxFlat.new()
+	xp_bg.bg_color = Color(1, 1, 1, 0.12)
+	xp_bg.set_corner_radius_all(4)
+	_xp_bar.add_theme_stylebox_override("background", xp_bg)
+	rank_box.add_child(_xp_bar)
+	_streak_label = _label(chip_row, "", 20, AMBER)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -310,17 +331,24 @@ func _build_dialogue() -> void:
 
 # --- Public API --------------------------------------------------------------
 
-func set_status(day: int, money: int) -> void:
+func set_status(day: int, money: int, rank_text: String = "", xp_frac: float = 0.0, streak: int = 0) -> void:
 	day_label.text = "Day %d" % day
 	money_label.text = "£%d" % money
+	_rank_label.text = rank_text
+	_xp_bar.value = xp_frac
+	_streak_label.text = ("Streak ×%d" % streak) if streak >= 2 else ""
 
 
-func set_timer(seconds: float) -> void:
+func set_timer(seconds: float, elapsed: float = 0.0, par: float = 0.0) -> void:
 	if seconds < 0:
 		timer_label.text = ""
 		return
 	var s := int(ceil(seconds))
-	timer_label.text = "Storm worsens  %d:%02d" % [s / 60, s % 60]
+	var pace := ""
+	if par > 0.0:
+		var e := int(elapsed)
+		pace = ("Par %d:%02d  ·  %d:%02d   |   " % [int(par) / 60, int(par) % 60, e / 60, e % 60]) if elapsed <= par else "Over par   |   "
+	timer_label.text = pace + "Storm worsens  %d:%02d" % [s / 60, s % 60]
 	timer_label.add_theme_color_override("font_color", RED if seconds < 60 else AMBER)
 
 
@@ -403,23 +431,52 @@ func open_dispatch(inst: Dictionary) -> void:
 	dispatch_panel.visible = true
 
 
+const MEDAL_COLORS := {"gold": Color(1.0, 0.80, 0.25), "silver": Color(0.80, 0.85, 0.92), "bronze": Color(0.85, 0.55, 0.32)}
+
+
 func open_result(result: Dictionary, consequence: String) -> void:
 	var v := _body(result_panel)
 	var ok: bool = result["outcome"] == "success"
-	_label(v, "ROAD REOPENED" if ok else "THE STORM WON THIS ONE", 32, Color(0.6, 0.9, 0.6) if ok else RED)
-	_label(v, result["title"], 20, Color(1, 1, 1, 0.7))
+	var grade: Dictionary = result.get("grade", {})
+	var medal: String = grade.get("medal", "")
+	var head := HBoxContainer.new()
+	v.add_child(head)
+	var title := _label(head, "JOB DONE" if ok else "THE STORM WON THIS ONE", 32, Color(0.6, 0.9, 0.6) if ok else RED)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if medal != "":
+		var stars := {"gold": "★★★", "silver": "★★☆", "bronze": "★☆☆"}
+		_label(head, "%s  %s" % [stars[medal], medal.to_upper()], 30, MEDAL_COLORS[medal])
 	var t := int(result["elapsed"])
-	_label(v, "Time on scene  %d:%02d" % [t / 60, t % 60], 20)
+	_label(v, "%s · %d:%02d on scene" % [result["title"], t / 60, t % 60], 18, Color(1, 1, 1, 0.7))
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 36)
+	v.add_child(cols)
+	var left := VBoxContainer.new()
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.add_theme_constant_override("separation", 4)
+	cols.add_child(left)
+	_label(left, "PERFORMANCE  %d/100" % int(grade.get("score", 0)), 20, AMBER)
+	for l in grade.get("lines", []):
+		_row(left, l["label"], "%d" % int(l["pts"]), CREAM)
+	if result.get("new_best", false):
+		_label(left, "New personal best!" + ("" if int(result.get("prev_best", -1)) < 0 else "  (was %d)" % int(result["prev_best"])), 18, Color(0.6, 0.9, 0.6))
+	for gc in result.get("goals_completed", []):
+		_label(left, "✔ Goal: %s  +£%d" % [gc["text"], int(gc["reward"])], 17, Color(0.6, 0.9, 0.6))
+	_label(left, "+%d station XP" % int(result.get("xp_gained", 0)), 18, TEAL.lightened(0.3))
+	var ru: Dictionary = result.get("rank_up", {})
+	if not ru.is_empty():
+		_label(left, "RANK UP!  %s — new upgrades on the board" % ru["title"], 20, AMBER)
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override("separation", 4)
+	cols.add_child(right)
+	_label(right, "FUNDING", 20, AMBER)
 	for l in result["payout"]["lines"]:
-		var row := HBoxContainer.new()
-		v.add_child(row)
-		var name_l := _label(row, l["label"], 20)
-		name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var amt := int(l["amount"])
-		_label(row, ("+£%d" % amt) if amt >= 0 else ("-£%d" % -amt), 20, Color(0.6, 0.9, 0.6) if amt >= 0 else RED)
-	_label(v, "Total  £%d" % int(result["payout"]["total"]), 24, AMBER)
+		_row(right, l["label"], ("+£%d" % amt) if amt >= 0 else ("-£%d" % -amt), Color(0.6, 0.9, 0.6) if amt >= 0 else RED)
+	_row(right, "Total", "£%d" % int(result["payout"]["total"]), AMBER)
 	if consequence != "":
-		_wrap(v, consequence, 20, Color(0.85, 0.85, 0.95))
+		_wrap(v, consequence, 19, Color(0.85, 0.85, 0.95))
 	var row2 := HBoxContainer.new()
 	v.add_child(row2)
 	var d := _button(row2, "Drive back", func() -> void:
@@ -431,37 +488,88 @@ func open_result(result: Dictionary, consequence: String) -> void:
 		return_chosen.emit("quick"), true)
 	q.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	result_panel.visible = true
+	if medal != "":
+		Audio.play("chime", -6.0, 1.0 if medal == "gold" else 0.85)
+
+
+func _row(parent: Node, label_text: String, value: String, color: Color) -> void:
+	var row := HBoxContainer.new()
+	parent.add_child(row)
+	var name_l := _label(row, label_text, 18)
+	name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_label(row, value, 18, color)
 
 
 func open_dashboard(model: GameModel) -> void:
 	var v := _body(dashboard_panel)
-	_label(v, "STATION BOARD — Day %d" % model.day, 30, AMBER)
-	_label(v, "Funds  £%d" % model.economy.money, 22)
-	_label(v, "Crew", 22, RED)
+	var r := model.rank()
+	var nxt := Progression.next_rank(model.xp)
+	_label(v, "STATION BOARD — Day %d · Funds £%d" % [model.day, model.economy.money], 28, AMBER)
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 30)
+	v.add_child(cols)
+	# Left: station record — what you've achieved and what's next.
+	var left := VBoxContainer.new()
+	left.custom_minimum_size = Vector2(400, 0)
+	left.add_theme_constant_override("separation", 4)
+	cols.add_child(left)
+	_label(left, "Rank %d · %s" % [int(r["rank"]), r["title"]], 22, TEAL.lightened(0.35))
+	var bar := ProgressBar.new()
+	bar.max_value = 1.0
+	bar.value = Progression.rank_progress(model.xp)
+	bar.show_percentage = false
+	bar.custom_minimum_size = Vector2(0, 12)
+	left.add_child(bar)
+	if nxt.is_empty():
+		_label(left, "%d XP · top rank" % model.xp, 16, Color(1, 1, 1, 0.7))
+	else:
+		_label(left, "%d / %d XP → %s (%d calls/shift)" % [model.xp, int(nxt["xp"]), nxt["title"], int(nxt["calls_per_shift"])], 16, Color(1, 1, 1, 0.7))
+	_label(left, "Medals  ★ %d gold · %d silver · %d bronze" % [int(model.stats.get("gold", 0)), int(model.stats.get("silver", 0)), int(model.stats.get("bronze", 0))], 17)
+	for def_id in model.best_scores:
+		_label(left, "Best %s: %d/100" % [String(model.incidents.defs[def_id]["category"]).replace("_", " "), int(model.best_scores[def_id])], 16, Color(1, 1, 1, 0.75))
+	_label(left, "Crew", 20, RED)
 	var ids := model.crew.members.keys()
 	ids.sort()
 	for id in ids:
 		var m: Dictionary = model.crew.members[id]
-		_label(v, "%s · %s   morale %d · trust %d · fatigue %d · xp %d" % [m["name"], m["role"], m["morale"], m["trust"], m["fatigue"], m["xp"]], 18)
-	_label(v, "Projects", 22, RED)
+		_label(left, "%s (%s)  morale %d · trust %d · tired %d%%" % [m["name"].get_slice(" ", 0), m["role"], m["morale"], m["trust"], m["fatigue"]], 16)
+	# Right: upgrades available now, then locked ones as visible targets.
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override("separation", 6)
+	cols.add_child(right)
+	_label(right, "Upgrades & community projects", 20, RED)
 	var projects := model.available_projects()
 	if projects.is_empty():
-		_label(v, "Nothing on the board right now.", 18, Color(1, 1, 1, 0.6))
+		_label(right, "Nothing to buy right now.", 16, Color(1, 1, 1, 0.6))
 	for p in projects:
 		var row := HBoxContainer.new()
-		v.add_child(row)
+		right.add_child(row)
 		var info := VBoxContainer.new()
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info.add_theme_constant_override("separation", 0)
 		row.add_child(info)
-		_label(info, p["label"], 20)
-		_wrap(info, p["description"], 16, Color(1, 1, 1, 0.65))
+		_label(info, p["label"], 18)
+		_wrap(info, p["description"], 14, Color(1, 1, 1, 0.65))
 		var pid: String = p["id"]
 		var b := _button(row, "£%d" % int(p["cost"]), func() -> void: project_bought.emit(pid))
 		b.disabled = not model.economy.can_afford(int(p["cost"]))
+	for p in model.locked_projects():
+		var lrow := HBoxContainer.new()
+		right.add_child(lrow)
+		var linfo := VBoxContainer.new()
+		linfo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		linfo.add_theme_constant_override("separation", 0)
+		lrow.add_child(linfo)
+		_label(linfo, "LOCKED · " + p["label"], 16, Color(1, 1, 1, 0.45))
+		_label(linfo, p["locked_reason"], 14, Color(0.95, 0.66, 0.23, 0.7))
 	var row2 := HBoxContainer.new()
 	v.add_child(row2)
 	var reason := model.can_end_shift()
-	var end := _button(row2, "End shift" if reason == "" else reason, func() -> void:
+	var end_text := "End shift" if reason == "" else reason
+	if reason == "" and model.calls_remaining() > 0:
+		end_text = "End shift early (%d call%s left)" % [model.calls_remaining(), "" if model.calls_remaining() == 1 else "s"]
+	var end := _button(row2, end_text, func() -> void:
 		dashboard_panel.visible = false
 		end_shift_pressed.emit())
 	end.disabled = reason != ""

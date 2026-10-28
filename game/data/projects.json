@@ -7,8 +7,17 @@
       "cost": 150,
       "requires": [],
       "effects": [
-        {"type": "equipment", "key": "chainsaw", "value": 2},
-        {"type": "crew", "who": "priya_nair", "stat": "morale", "delta": 5}
+        {
+          "type": "equipment",
+          "key": "chainsaw",
+          "value": 2
+        },
+        {
+          "type": "crew",
+          "who": "priya_nair",
+          "stat": "morale",
+          "delta": 5
+        }
       ]
     },
     {
@@ -16,12 +25,34 @@
       "label": "Patch the Mendes roof",
       "description": "The crew spends an evening tarping and patching Rosa's roof.",
       "cost": 220,
-      "requires": [{"type": "world", "key": "house_mendes.roof", "value": "damaged"}],
+      "requires": [
+        {
+          "type": "world",
+          "key": "house_mendes.roof",
+          "value": "damaged"
+        }
+      ],
       "effects": [
-        {"type": "world", "key": "house_mendes.roof", "value": "repaired"},
-        {"type": "relationship", "who": "rosa_mendes", "delta": 20},
-        {"type": "memory", "who": "rosa_mendes", "memory": "roof_patched_by_crew"},
-        {"type": "flag", "key": "roof_patched_house_mendes", "value": true}
+        {
+          "type": "world",
+          "key": "house_mendes.roof",
+          "value": "repaired"
+        },
+        {
+          "type": "relationship",
+          "who": "rosa_mendes",
+          "delta": 20
+        },
+        {
+          "type": "memory",
+          "who": "rosa_mendes",
+          "memory": "roof_patched_by_crew"
+        },
+        {
+          "type": "flag",
+          "key": "roof_patched_house_mendes",
+          "value": true
+        }
       ]
     },
     {
@@ -29,11 +60,160 @@
       "label": "Patch the Penhallow roof",
       "description": "Arthur supervises. Loudly.",
       "cost": 220,
-      "requires": [{"type": "world", "key": "house_penhallow.roof", "value": "damaged"}],
+      "requires": [
+        {
+          "type": "world",
+          "key": "house_penhallow.roof",
+          "value": "damaged"
+        }
+      ],
       "effects": [
-        {"type": "world", "key": "house_penhallow.roof", "value": "repaired"},
-        {"type": "relationship", "who": "arthur_penhallow", "delta": 20},
-        {"type": "flag", "key": "roof_patched_house_penhallow", "value": true}
+        {
+          "type": "world",
+          "key": "house_penhallow.roof",
+          "value": "repaired"
+        },
+        {
+          "type": "relationship",
+          "who": "arthur_penhallow",
+          "delta": 20
+        },
+        {
+          "type": "flag",
+          "key": "roof_patched_house_penhallow",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "cone_trailer",
+      "label": "Cone trailer for the truck",
+      "description": "Cones ride pre-stacked: you place them in half the time and Theo works faster.",
+      "cost": 180,
+      "requires": [
+        {
+          "type": "rank_min",
+          "value": 2
+        }
+      ],
+      "effects": [
+        {
+          "type": "equipment",
+          "key": "cones",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "pump_service",
+      "label": "Priya rebuilds the pump",
+      "description": "New impeller and a primer bulb: pumps 30% faster and the pull-start window is wider.",
+      "cost": 200,
+      "requires": [
+        {
+          "type": "rank_min",
+          "value": 2
+        }
+      ],
+      "effects": [
+        {
+          "type": "equipment",
+          "key": "pump",
+          "value": 2
+        },
+        {
+          "type": "crew",
+          "who": "priya_nair",
+          "stat": "morale",
+          "delta": 5
+        }
+      ]
+    },
+    {
+      "id": "station_kitchen",
+      "label": "Fix the station kitchen",
+      "description": "A working kettle does wonders. Crew morale up across the board.",
+      "cost": 120,
+      "requires": [
+        {
+          "type": "rank_min",
+          "value": 2
+        }
+      ],
+      "effects": [
+        {
+          "type": "crew",
+          "who": "maren_holt",
+          "stat": "morale",
+          "delta": 10
+        },
+        {
+          "type": "crew",
+          "who": "theo_vance",
+          "stat": "morale",
+          "delta": 10
+        },
+        {
+          "type": "crew",
+          "who": "priya_nair",
+          "stat": "morale",
+          "delta": 10
+        }
+      ]
+    },
+    {
+      "id": "chainsaw_pro",
+      "label": "Professional chain & bar",
+      "description": "Requires the serviced saw. Cuts much faster and barely binds.",
+      "cost": 320,
+      "requires": [
+        {
+          "type": "rank_min",
+          "value": 3
+        },
+        {
+          "type": "project_done",
+          "value": "service_chainsaw"
+        }
+      ],
+      "effects": [
+        {
+          "type": "equipment",
+          "key": "chainsaw",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "theo_training",
+      "label": "Send Theo on a scene-safety course",
+      "description": "Theo cones off scenes faster and Maren starts to trust him.",
+      "cost": 250,
+      "requires": [
+        {
+          "type": "rank_min",
+          "value": 3
+        }
+      ],
+      "effects": [
+        {
+          "type": "crew",
+          "who": "theo_vance",
+          "stat": "trust",
+          "delta": 10
+        },
+        {
+          "type": "skill",
+          "who": "theo_vance",
+          "skill": "safety",
+          "delta": 25
+        },
+        {
+          "type": "crew",
+          "who": "maren_holt",
+          "stat": "trust",
+          "delta": 5
+        }
       ]
     }
   ]

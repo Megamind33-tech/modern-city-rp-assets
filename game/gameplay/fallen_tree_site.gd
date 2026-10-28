@@ -32,8 +32,8 @@ var _bind_rate := BASE_BIND_RATE
 
 func _prepare() -> void:
 	var level := int(model.equipment.get("chainsaw", 1))
-	_cut_rate = BASE_CUT_RATE * (1.35 if level >= 2 else 1.0)
-	_bind_rate = BASE_BIND_RATE * (0.7 if level >= 2 else 1.0)
+	_cut_rate = BASE_CUT_RATE * [1.0, 1.0, 1.35, 1.7][clampi(level, 1, 3)]
+	_bind_rate = BASE_BIND_RATE * [1.0, 1.0, 0.7, 0.5][clampi(level, 1, 3)]
 	n = int(model.incidents.find_task("cut_trunk")["required"])
 	for i in n:
 		cut_progress.append(0.0)
@@ -218,6 +218,7 @@ func _hold_cut(i: int, dt: float) -> void:
 		_sawdust.emitting = false
 		Audio.loop_stop("saw")
 		Audio.play("stall")
+		model.note("stalls")
 		message.emit("Chain bound up! Ease off sooner.")
 		return
 	cut_progress[i] = float(cut_progress[i]) + _cut_rate * dt

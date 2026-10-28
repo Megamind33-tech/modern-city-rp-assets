@@ -1,0 +1,34 @@
+{
+  "ranks": [
+    {"rank": 1, "title": "Probationary Station", "xp": 0, "calls_per_shift": 2},
+    {"rank": 2, "title": "Volunteer Post", "xp": 250, "calls_per_shift": 2},
+    {"rank": 3, "title": "Retained Station", "xp": 650, "calls_per_shift": 3},
+    {"rank": 4, "title": "Kettleford Rescue", "xp": 1300, "calls_per_shift": 3},
+    {"rank": 5, "title": "Pride of the Valley", "xp": 2300, "calls_per_shift": 4}
+  ],
+  "medals": [
+    {"medal": "gold", "min": 85, "xp_bonus": 60},
+    {"medal": "silver", "min": 70, "xp_bonus": 30},
+    {"medal": "bronze", "min": 50, "xp_bonus": 10}
+  ],
+  "story_xp_bonus": 50,
+  "streak_bonus_pct": 5,
+  "streak_cap": 5,
+  "goals_per_shift": 3,
+  "goals": [
+    {"id": "no_stall", "text": "Clear a tree without stalling the saw", "reward": 60, "xp": 40,
+     "when": [{"type": "def", "value": "fallen_tree"}, {"type": "flag_max", "key": "stalls", "value": 0}]},
+    {"id": "gold_any", "text": "Earn a gold medal", "reward": 80, "xp": 50,
+     "when": [{"type": "medal", "value": "gold"}]},
+    {"id": "safe_scene", "text": "Cone off a scene before any work starts", "reward": 50, "xp": 30,
+     "when": [{"type": "flag", "key": "secured", "value": true}, {"type": "flag", "key": "unsafe_cut", "value": false}]},
+    {"id": "delegate", "text": "Let Theo secure a scene", "reward": 40, "xp": 30,
+     "when": [{"type": "flag", "key": "delegated_secure", "value": true}]},
+    {"id": "fast", "text": "Resolve a call in under 90 seconds", "reward": 70, "xp": 40,
+     "when": [{"type": "elapsed_max", "value": 90}]},
+    {"id": "clean_pulls", "text": "Start a pump without a missed pull", "reward": 60, "xp": 40,
+     "when": [{"type": "def", "value": "flooded_cellar"}, {"type": "flag_max", "key": "missed_pulls", "value": 0}]},
+    {"id": "streak3", "text": "Reach a clean streak of 3", "reward": 90, "xp": 60,
+     "when": [{"type": "streak_min", "value": 3}]}
+  ]
+}

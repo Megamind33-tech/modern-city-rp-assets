@@ -774,3 +774,342 @@ def radio_handset():
     b.cyl(N, 0.011, 0.02, (-0.018, 0.0, 0.16), "amber", segs=6)  # channel knob
     b.box_mm(N, (-0.04, -0.01, 0.06), (-0.035, 0.012, 0.11), "amber")  # PTT
     return b.finish()
+
+
+# =============================================================== Batch C v2: ground / roads / flood kit
+def grid(b, node, x0, x1, y0, y1, nx, ny, zf, pf):
+    """quad grid, faces wound CCW seen from +Z. zf(x,y)->z, pf(i,j,cx,cy)->palette"""
+    verts, faces, pals = [], [], []
+    for j in range(ny + 1):
+        for i in range(nx + 1):
+            x = x0 + (x1 - x0) * i / nx
+            y = y0 + (y1 - y0) * j / ny
+            verts.append((x, y, zf(x, y)))
+    for j in range(ny):
+        for i in range(nx):
+            a = j * (nx + 1) + i
+            faces.append([a, a + 1, a + nx + 2, a + nx + 1])
+            pals.append(pf(i, j, x0 + (x1 - x0) * (i + 0.5) / nx, y0 + (y1 - y0) * (j + 0.5) / ny))
+    return b.poly(node, verts, faces, None, face_pals=pals)
+
+
+def quad(b, node, x0, y0, x1, y1, z, pal):
+    return b.poly(node, [(x0, y0, z), (x1, y0, z), (x1, y1, z), (x0, y1, z)], [[0, 1, 2, 3]], pal)
+
+
+def _noise(seed):
+    rng = random.Random(seed)
+    ph = [(rng.uniform(0, 6.28), rng.uniform(0, 6.28), rng.uniform(0.25, 0.6), rng.uniform(0.25, 0.6)) for _ in range(3)]
+    return lambda x, y: sum(math.sin(x * fx + a) * math.sin(y * fy + c) for a, c, fx, fy in ph) / 3
+
+
+@gen
+def ground_grass_tile(seed=41, size=10.0, n=14):
+    b = Builder(seed, recalc=False)
+    rng = random.Random(seed)
+    h = size / 2
+    nz = _noise(seed)
+    soil = [(rng.uniform(-3, 3), rng.uniform(-3, 3)) for _ in range(2)]
+
+    def zf(x, y):  # edges flat at 0 so tiles join; <=0.15 undulation inside
+        edge = min(1.0, (h - abs(x)) / 1.5, (h - abs(y)) / 1.5)
+        return max(0.0, edge) * (0.06 + 0.06 * nz(x, y))
+
+    def pf(i, j, cx, cy):
+        if any((cx - sx) ** 2 + (cy - sy) ** 2 < 0.7 for sx, sy in soil):
+            return "soil"
+        return "grass_dark" if nz(cx * 1.7, cy * 1.7) + rng.uniform(-0.25, 0.25) > 0.15 else "grass"
+    grid(b, "Ground", -h, h, -h, h, n, n, zf, pf)
+    return b.finish()
+
+
+@gen
+def ground_garden(seed=42, path_x=-1.7):
+    """8x8 front garden; path runs the full depth at x=path_x (house door x for house_a/c/d)."""
+    b = Builder(seed, recalc=False)
+    rng = random.Random(seed)
+    h = 4.0
+    nz = _noise(seed)
+    pw = 0.6
+    xs = [-h, -h + 0.6, path_x - pw, path_x + pw, h - 0.6, h]
+    for k in range(len(xs) - 1):
+        xa, xb = xs[k], xs[k + 1]
+        if k == 2:
+            grid(b, "Ground", xa, xb, -h, h, 1, 8, lambda x, y: 0.02, lambda i, j, cx, cy: "pavement" if j % 2 else "kerb")
+        elif k in (0, 4):
+            grid(b, "Ground", xa, xb, -h, h, 1, 6, lambda x, y: 0.03, lambda i, j, cx, cy: "soil")
+        else:
+            grid(b, "Ground", xa, xb, -h, h, 3, 8, lambda x, y: 0.02 + 0.03 * nz(x, y) ** 2,
+                 lambda i, j, cx, cy: "grass" if (i + j) % 3 else "grass_dark")
+    # flower beds along the two side edges: edging + flowers
+    for x0 in (-h + 0.6, h - 0.6):
+        b.box_mm("Ground", (x0 - 0.04, -h, 0), (x0 + 0.04, h, 0.1), "kerb")
+        for k in range(7):
+            y = -h + 0.6 + k * 1.1 + rng.uniform(-0.2, 0.2)
+            xx = (x0 - 0.3) if x0 > 0 else (x0 - 0.3 + 0.0)
+            xx = x0 - 0.3 if x0 > 0 else x0 - 0.3
+            b.sphere("Ground", 0.22, (xx if x0 > 0 else -h + 0.3, y, 0.15), "leaf", subdiv=1, scale=(1, 1, 0.7))
+            b.sphere("Ground", 0.09, ((xx if x0 > 0 else -h + 0.3) + 0.05, y + 0.08, 0.32),
+                     ("flower_pink", "flower_yellow", "line_white")[k % 3], subdiv=1)
+    return b.finish()
+
+
+ROAD_W, PAVE_W, KERB_H = 8.0, 1.6, 0.12
+
+
+def _pavement_strip(b, x0, x1, y0, y1, kerb_side_y, z=KERB_H):
+    """pavement slab x0..x1 / y0..y1 (top at z) with a kerb stone on the carriageway edge"""
+    b.box_mm("Road", (x0, y0, 0), (x1, y1, z), "pavement")
+    ky = kerb_side_y
+    k0, k1 = (ky, ky + 0.2) if ky == y0 else (ky - 0.2, ky)
+    b.box_mm("Road", (x0, k0, 0), (x1, k1, z + 0.005), "kerb")
+
+
+@gen
+def road_straight_8m():
+    """8 m long along Blender Y (= Godot Z); carriageway 8 m, pavements 1.6 m with kerbs. Seamless along Y."""
+    b = Builder(recalc=False)
+    L = 4.0
+    hw = ROAD_W / 2
+    strips = [-hw, -hw + 0.6, -0.5, 0.5, hw - 0.6, hw]  # extra cuts near kerbs for nicer AO
+    for k in range(len(strips) - 1):
+        grid(b, "Road", strips[k], strips[k + 1], -L, L, 1, 2, lambda x, y: 0.0, lambda i, j, cx, cy: "asphalt")
+    for y0 in (-3.0, 1.0):  # dashes: period 4 m -> seamless on 8 m tiles
+        quad(b, "Road", -0.07, y0, 0.07, y0 + 2.0, 0.005, "line_white")
+    for sx in (-1, 1):
+        quad(b, "Road", sx * (hw - 0.35) - 0.05, -L, sx * (hw - 0.35) + 0.05, L, 0.004, "line_yellow")
+    rb = Builder(recalc=True)
+    for sx in (-1, 1):
+        xa, xb = (hw, hw + PAVE_W) if sx > 0 else (-hw - PAVE_W, -hw)
+        rb.box_mm("Road", (xa, -L, 0), (xb, L, KERB_H), "pavement")
+        kx = (hw, hw + 0.2) if sx > 0 else (-hw - 0.2, -hw)
+        rb.box_mm("Road", (kx[0], -L, 0), (kx[1], L, KERB_H + 0.005), "kerb")
+    objs = b.finish() + rb.finish()
+    return _join(objs)
+
+
+def _join(objs):
+    import bpy
+    from lib import select_only
+    select_only(objs, objs[0])
+    bpy.ops.object.join()
+    o = bpy.context.view_layer.objects.active
+    return [o]
+
+
+@gen
+def road_junction_T():
+    """11.2 x 11.2 m tile: main road along X (pavements both sides), lane leaving towards Blender -Y (Godot +Z)."""
+    b = Builder(recalc=False)
+    hw = ROAD_W / 2
+    T = hw + PAVE_W  # 5.6
+    # carriageway: main band + lane mouth
+    for (xa, xb) in ((-T, -hw), (-hw, hw), (hw, T)):
+        grid(b, "Road", xa, xb, -hw, hw, 1, 2, lambda x, y: 0.0, lambda i, j, cx, cy: "asphalt")
+    grid(b, "Road", -hw, hw, -T, -hw, 2, 1, lambda x, y: 0.0, lambda i, j, cx, cy: "asphalt")
+    for x0 in (-5.6, -1.6, 2.4):  # main road centre dashes (4 m period along X)
+        quad(b, "Road", x0, -0.07, min(x0 + 2.0, T), 0.07, 0.005, "line_white")
+    for x0 in (-hw + 0.3, -hw + 1.6, 0.3, 1.6, 2.9):  # give-way double dashes across the lane mouth
+        for dy in (-0.15, -0.45):
+            quad(b, "Road", x0, -hw + dy - 0.1, x0 + 0.8, -hw + dy + 0.1, 0.005, "line_white")
+    quad(b, "Road", -0.07, -T, 0.07, -T + 1.6, 0.005, "line_white")
+    rb = Builder(recalc=True)
+    # +Y pavement full length
+    rb.box_mm("Road", (-T, hw, 0), (T, T, KERB_H), "pavement")
+    rb.box_mm("Road", (-T, hw, 0), (T, hw + 0.2, KERB_H + 0.005), "kerb")
+    # -Y pavement corners either side of the lane
+    for sx in (-1, 1):
+        xa, xb = (hw, T) if sx > 0 else (-T, -hw)
+        rb.box_mm("Road", (xa, -T, 0), (xb, -hw, KERB_H), "pavement")
+        rb.box_mm("Road", (xa, -hw - 0.2, 0), (xb, -hw, KERB_H + 0.005), "kerb")
+        kx = (hw, hw + 0.2) if sx > 0 else (-hw - 0.2, -hw)
+        rb.box_mm("Road", (kx[0], -T, 0), (kx[1], -hw - 0.2, KERB_H + 0.005), "kerb")
+    return _join(b.finish() + rb.finish())
+
+
+@gen
+def flood_pump():
+    b = Builder()
+    N = "Body"
+    # navy tube frame 0.8 x 0.6 x 0.6, amber engine, steel outlets
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            b.box_mm(N, (sx * 0.4 - 0.025 * (sx + 1), sy * 0.3 - 0.025 * (sy + 1), 0), (sx * 0.4 - 0.025 * (sx - 1), sy * 0.3 - 0.025 * (sy - 1), 0.6), "navy")
+        b.box_mm(N, (-0.4, sx * 0.3 - 0.025 * (sx + 1), 0.55), (0.4, sx * 0.3 - 0.025 * (sx - 1), 0.6), "navy")
+        b.box_mm(N, (-0.4, sx * 0.3 - 0.025 * (sx + 1), 0.0), (0.4, sx * 0.3 - 0.025 * (sx - 1), 0.05), "navy")
+    b.box_mm(N, (-0.3, -0.22, 0.05), (0.12, 0.22, 0.42), "amber")
+    b.box_mm(N, (-0.28, -0.2, 0.42), (0.0, 0.2, 0.5), "tyre")  # fuel tank top
+    b.cyl(N, 0.04, 0.05, (-0.15, 0.0, 0.52), "warning_red", segs=6)  # cap
+    b.cyl(N, 0.15, 0.24, (0.25, 0, 0.25), "steel", segs=10, rot=(0, 90, 0))  # pump volute
+    for y, z in ((0.0, 0.42), (0.0, 0.08)):
+        b.cyl(N, 0.055, 0.2, (0.42, y, z), "steel", segs=8, rot=(0, 90, 0))  # inlet / outlet
+        b.cyl(N, 0.07, 0.04, (0.52, y, z), "amber", segs=8, rot=(0, 90, 0))
+    b.box_mm(N, (-0.42, -0.06, 0.25), (-0.4, 0.06, 0.4), "line_white")  # pull start
+    return b.finish()
+
+
+@gen
+def hose_coupling():
+    b = Builder()
+    N = "Body"
+    # storz-style coupling with a short red hose stub, lying along X
+    b.cyl(N, 0.07, 0.12, (0.0, 0, 0.07), "steel", segs=10, rot=(0, 90, 0))
+    for sx in (-1, 1):
+        b.box_mm(N, (-0.02, sx * 0.07 - 0.015, 0.045), (0.02, sx * 0.07 + 0.015, 0.095), "steel")  # lugs
+    b.cyl(N, 0.055, 0.06, (-0.09, 0, 0.07), "slate", segs=10, rot=(0, 90, 0))
+    b.cyl(N, 0.05, 0.4, (-0.32, 0, 0.06), "signal_red", segs=8, rot=(0, 90, 0))
+    b.cyl(N, 0.055, 0.06, (0.09, 0, 0.07), "slate", segs=10, rot=(0, 90, 0))
+    b.cyl(N, 0.05, 0.4, (0.32, 0, 0.06), "signal_red", segs=8, rot=(0, 90, 0))
+    return b.finish()
+
+
+@gen
+def drain_grate():
+    b = Builder()
+    N = "Body"
+    b.box_mm(N, (-0.35, -0.25, 0), (0.35, 0.25, 0.02), "asphalt_light")
+    b.box_mm(N, (-0.3, -0.2, 0.0), (0.3, 0.2, 0.022), "tyre")
+    for i in range(7):
+        x = -0.27 + i * 0.09
+        b.box_mm(N, (x - 0.018, -0.2, 0.0), (x + 0.018, 0.2, 0.03), "asphalt_light")
+    return b.finish()
+
+
+@gen
+def cellar_hatch():
+    """In HOUSE local space: sloped double cellar door against the front wall, left of the door
+    (x -3.42..-2.65), fits every house_* (front wall y=4.0, plinth 0.35)."""
+    b = Builder()
+    N = "Body"
+    x0, x1 = -3.42, -2.65
+    y0, y1 = HY, HY + 0.85
+    zt, zf = 0.6, 0.18
+    b.poly(N, [(x0, y0, 0), (x1, y0, 0), (x1, y1, 0), (x0, y1, 0), (x0, y0, zt), (x1, y0, zt), (x1, y1, zf), (x0, y1, zf)],
+           [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]], "concrete")
+    ang = math.degrees(math.atan2(zt - zf, y1 - y0))
+    xm = (x0 + x1) / 2
+    for sx in (-1, 1):
+        cx = xm + sx * (x1 - x0) / 4
+        b.box(N, ((x1 - x0) / 2 - 0.06, 0.82, 0.05), (cx, (y0 + y1) / 2 + 0.02, (zt + zf) / 2 + 0.02), "dark_wood", rot=(-ang, 0, 0))
+        b.box(N, (0.04, 0.12, 0.04), (xm + sx * 0.06, (y0 + y1) / 2 + 0.2, (zt + zf) / 2 - 0.02), "steel", rot=(-ang, 0, 0))
+    return b.finish()
+
+
+# =============================================================== Batch C v2: street dressing
+@gen
+def hedge_section(seed=51):
+    b = Builder(seed)
+    N = "Body"
+    b.box_mm(N, (-1.0, -0.35, 0), (1.0, 0.35, 0.95), "grass_dark", face_pal={"+z": "leaf"})
+    for k, x in enumerate((-0.62, 0.0, 0.62)):
+        b.sphere(N, 0.42, (x, 0, 0.92), ("leaf", "leaf_light", "leaf")[k], subdiv=2, scale=(0.9, 0.8, 0.45), jitter=0.03)
+    return b.finish()
+
+
+@gen
+def garden_wall():
+    b = Builder()
+    N = "Body"
+    b.box_mm(N, (-1.0, -0.15, 0), (1.0, 0.15, 0.85), "brick")
+    b.box_mm(N, (-1.0, -0.19, 0.85), (1.0, 0.19, 0.95), "concrete")
+    b.box_mm(N, (-1.0, -0.17, 0), (1.0, 0.17, 0.08), "concrete")
+    return b.finish()
+
+
+@gen
+def gate():
+    """1.0 m garden gate between two posts; `Gate` node pivots at its hinge (x=-0.45)."""
+    b = Builder()
+    for x in (-0.55, 0.55):
+        b.box_mm("Body", (x - 0.06, -0.06, 0), (x + 0.06, 0.06, 1.15), "plaster")
+        b.cyl("Body", 0.08, 0.06, (x, 0, 1.18), "plaster", segs=4, r2=0.02, rot=(0, 0, 45))
+    G = "Gate"
+    for z in (0.25, 0.75):
+        b.box_mm(G, (-0.47, -0.03, z - 0.04), (0.47, 0.0, z + 0.04), "plaster")
+    for i in range(5):
+        x = -0.38 + i * 0.19
+        b.box_mm(G, (x - 0.045, 0.0, 0.08), (x + 0.045, 0.03, 0.92), "plaster")
+    b.box(G, (0.05, 0.02, 0.75), (0, -0.04, 0.5), "plaster", rot=(0, 52, 0))
+    b.box_mm(G, (0.38, 0.03, 0.55), (0.44, 0.06, 0.6), "steel")  # latch
+    b.pivots[G] = (-0.47, 0, 0)
+    return b.finish()
+
+
+@gen
+def bollard():
+    b = Builder()
+    N = "Body"
+    b.cyl(N, 0.11, 0.85, (0, 0, 0.425), "navy", segs=8)
+    b.cyl(N, 0.115, 0.08, (0, 0, 0.7), "line_white", segs=8)
+    b.cyl(N, 0.12, 0.08, (0, 0, 0.89), "navy", segs=8, r2=0.06)
+    return b.finish()
+
+
+@gen
+def bus_shelter():
+    b = Builder()
+    N = "Body"
+    W, D, Hh = 3.0, 1.4, 2.5
+    for x in (-W / 2, W / 2):
+        for y in (-D / 2, D / 2 - 0.3):
+            b.box_mm(N, (x - 0.05, y - 0.05, 0), (x + 0.05, y + 0.05, Hh), "navy")
+    b.box_mm(N, (-W / 2 - 0.15, -D / 2 - 0.15, Hh), (W / 2 + 0.15, D / 2 + 0.2, Hh + 0.1), "navy")
+    b.box_mm(N, (-W / 2 + 0.05, -D / 2 - 0.02, 0.15), (W / 2 - 0.05, -D / 2 + 0.02, Hh - 0.1), "glass")  # back
+    for x in (-W / 2, W / 2):
+        b.box_mm(N, (x - 0.02, -D / 2 + 0.05, 0.15), (x + 0.02, D / 2 - 0.35, Hh - 0.1), "glass")
+    b.box_mm(N, (-1.0, -D / 2 + 0.1, 0.45), (1.0, -D / 2 + 0.45, 0.52), "light_wood")  # bench
+    for x in (-0.9, 0.9):
+        b.box_mm(N, (x - 0.04, -D / 2 + 0.2, 0), (x + 0.04, -D / 2 + 0.3, 0.45), "navy")
+    b.box_mm(N, (W / 2 - 0.05, D / 2 - 0.3, 1.9), (W / 2 + 0.05, D / 2 + 0.3, 2.3), "teal")  # route flag
+    b.box_mm(N, (-W / 2 + 0.3, -D / 2 + 0.02, 1.2), (-W / 2 + 0.9, -D / 2 + 0.05, 1.9), "cream")  # timetable
+    return b.finish()
+
+
+@gen
+def wheelie_bin(color="door_green"):
+    b = Builder()
+    N = "Body"
+    b.poly(N, [(-0.3, -0.33, 0.08), (0.3, -0.33, 0.08), (0.3, 0.3, 0.08), (-0.3, 0.3, 0.08),
+               (-0.34, -0.38, 1.0), (0.34, -0.38, 1.0), (0.34, 0.37, 1.0), (-0.34, 0.37, 1.0)],
+           [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]], color)
+    b.box_mm(N, (-0.36, -0.42, 1.0), (0.36, 0.4, 1.06), color)  # lid
+    b.box_mm(N, (-0.3, -0.48, 0.96), (0.3, -0.4, 1.02), "tyre")  # handle (back)
+    for sx in (-1, 1):
+        b.cyl(N, 0.1, 0.06, (sx * 0.27, -0.33, 0.1), "tyre", segs=8, rot=(0, 90, 0))
+    b.box_mm(N, (-0.12, 0.3, 0.7), (0.12, 0.34, 0.82), "line_white")  # house number plate (front)
+    return b.finish()
+
+
+@gen
+def puddle_decal(seed=61):
+    b = Builder(seed, recalc=False)
+    rng = random.Random(seed)
+    n = 14
+    pts = []
+    for k in range(n):
+        a = k / n * math.tau
+        r = rng.uniform(0.8, 1.0)
+        pts.append((math.cos(a) * 0.8 * r, math.sin(a) * 0.55 * r, 0.006))
+    b.poly("Puddle", [(0, 0, 0.006)] + pts, [[0, 1 + k, 1 + (k + 1) % n] for k in range(n)], "water")
+    return b.finish()
+
+
+@gen
+def leaf_litter(seed=62, count=40, size=2.0):
+    b = Builder(seed, recalc=False)
+    rng = random.Random(seed)
+    cols = ("leaf", "leaf_light", "mustard", "terracotta", "bark")
+    vs, fs, ps = [], [], []
+    for k in range(count):
+        cx, cy = rng.uniform(-size / 2, size / 2), rng.uniform(-size / 2, size / 2)
+        a = rng.uniform(0, math.tau)
+        L, Wd = rng.uniform(0.07, 0.12), rng.uniform(0.035, 0.06)
+        ca, sa = math.cos(a), math.sin(a)
+        loc = [(L, 0), (0, Wd), (-L, 0), (0, -Wd)]
+        base = len(vs)
+        z = 0.008 + 0.002 * (k % 3)
+        vs += [(cx + x * ca - y * sa, cy + x * sa + y * ca, z) for x, y in loc]
+        fs.append([base, base + 1, base + 2, base + 3])
+        ps.append(cols[k % len(cols)])
+    b.poly("Leaves", vs, fs, None, face_pals=ps)
+    return b.finish()

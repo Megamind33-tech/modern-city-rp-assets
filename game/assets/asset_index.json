@@ -492,6 +492,189 @@
    "skeleton": "Armature",
    "bones": 23
   },
+  "ground_grass_tile": {
+   "path": "res://assets/env/ground_grass_tile.glb",
+   "category": "env",
+   "tris": 392,
+   "size_m": [
+    10.0,
+    0.1,
+    10.0
+   ],
+   "nodes": [
+    "Ground"
+   ],
+   "animations": []
+  },
+  "ground_garden": {
+   "path": "res://assets/env/ground_garden.glb",
+   "category": "env",
+   "tris": 582,
+   "size_m": [
+    8.0,
+    0.414,
+    8.0
+   ],
+   "nodes": [
+    "Ground"
+   ],
+   "animations": []
+  },
+  "road_straight_8m": {
+   "path": "res://assets/env/road_straight_8m.glb",
+   "category": "env",
+   "tris": 76,
+   "size_m": [
+    11.2,
+    0.125,
+    8.0
+   ],
+   "nodes": [
+    "Road"
+   ],
+   "animations": []
+  },
+  "road_junction_T": {
+   "path": "res://assets/env/road_junction_T.glb",
+   "category": "env",
+   "tris": 140,
+   "size_m": [
+    11.2,
+    0.125,
+    11.2
+   ],
+   "nodes": [
+    "Road"
+   ],
+   "animations": []
+  },
+  "flood_pump": {
+   "path": "res://assets/props/flood_pump.glb",
+   "category": "props",
+   "tris": 300,
+   "size_m": [
+    0.96,
+    0.6,
+    0.6
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "hose_coupling": {
+   "path": "res://assets/props/hose_coupling.glb",
+   "category": "props",
+   "tris": 500,
+   "size_m": [
+    1.04,
+    0.133,
+    0.17
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "drain_grate": {
+   "path": "res://assets/props/drain_grate.glb",
+   "category": "props",
+   "tris": 108,
+   "size_m": [
+    0.7,
+    0.03,
+    0.5
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "cellar_hatch": {
+   "path": "res://assets/props/cellar_hatch.glb",
+   "category": "props",
+   "tris": 220,
+   "size_m": [
+    0.77,
+    0.61,
+    0.85
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "radio_handset": {
+   "path": "res://assets/props/radio_handset.glb",
+   "category": "props",
+   "tris": 400,
+   "size_m": [
+    0.075,
+    0.26,
+    0.048
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "hedge_section": {
+   "path": "res://assets/props/hedge_section.glb",
+   "category": "props",
+   "tris": 252,
+   "size_m": [
+    2.0,
+    1.132,
+    0.719
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "fence_section": {
+   "path": "res://assets/props/fence_section.glb",
+   "category": "props",
+   "tris": 750,
+   "size_m": [
+    2.0,
+    1.11,
+    0.11
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "garden_wall": {
+   "path": "res://assets/props/garden_wall.glb",
+   "category": "props",
+   "tris": 132,
+   "size_m": [
+    2.0,
+    0.95,
+    0.38
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "gate": {
+   "path": "res://assets/props/gate.glb",
+   "category": "props",
+   "tris": 572,
+   "size_m": [
+    1.22,
+    1.21,
+    0.12
+   ],
+   "nodes": [
+    "Body",
+    "Gate"
+   ],
+   "animations": []
+  },
   "lamp_post": {
    "path": "res://assets/props/lamp_post.glb",
    "category": "props",
@@ -549,14 +732,14 @@
    ],
    "animations": []
   },
-  "fence_section": {
-   "path": "res://assets/props/fence_section.glb",
+  "mailbox": {
+   "path": "res://assets/props/mailbox.glb",
    "category": "props",
-   "tris": 750,
+   "tris": 464,
    "size_m": [
-    2.0,
-    1.11,
-    0.11
+    0.58,
+    1.518,
+    0.58
    ],
    "nodes": [
     "Body"
@@ -571,20 +754,6 @@
     2.0,
     8.0,
     0.72
-   ],
-   "nodes": [
-    "Body"
-   ],
-   "animations": []
-  },
-  "mailbox": {
-   "path": "res://assets/props/mailbox.glb",
-   "category": "props",
-   "tris": 464,
-   "size_m": [
-    0.58,
-    1.518,
-    0.58
    ],
    "nodes": [
     "Body"
@@ -620,8 +789,36 @@
    ],
    "animations": []
   },
-  "resident_car": {
-   "path": "res://assets/vehicles/resident_car.glb",
+  "bollard": {
+   "path": "res://assets/props/bollard.glb",
+   "category": "props",
+   "tris": 244,
+   "size_m": [
+    0.215,
+    0.93,
+    0.215
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "bus_shelter": {
+   "path": "res://assets/props/bus_shelter.glb",
+   "category": "props",
+   "tris": 572,
+   "size_m": [
+    3.3,
+    2.6,
+    1.85
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "parked_car_a": {
+   "path": "res://assets/vehicles/parked_car_a.glb",
    "category": "vehicles",
    "tris": 1440,
    "size_m": [
@@ -634,17 +831,59 @@
    ],
    "animations": []
   },
-  "radio_handset": {
-   "path": "res://assets/props/radio_handset.glb",
-   "category": "props",
-   "tris": 400,
+  "parked_car_b": {
+   "path": "res://assets/vehicles/parked_car_b.glb",
+   "category": "vehicles",
+   "tris": 1440,
    "size_m": [
-    0.075,
-    0.26,
-    0.048
+    1.96,
+    1.5,
+    4.05
    ],
    "nodes": [
     "Body"
+   ],
+   "animations": []
+  },
+  "wheelie_bin": {
+   "path": "res://assets/props/wheelie_bin.glb",
+   "category": "props",
+   "tris": 360,
+   "size_m": [
+    0.72,
+    1.052,
+    0.88
+   ],
+   "nodes": [
+    "Body"
+   ],
+   "animations": []
+  },
+  "puddle_decal": {
+   "path": "res://assets/props/puddle_decal.glb",
+   "category": "props",
+   "tris": 14,
+   "size_m": [
+    1.417,
+    0.0,
+    0.96
+   ],
+   "nodes": [
+    "Puddle"
+   ],
+   "animations": []
+  },
+  "leaf_litter": {
+   "path": "res://assets/props/leaf_litter.glb",
+   "category": "props",
+   "tris": 80,
+   "size_m": [
+    2.07,
+    0.004,
+    2.113
+   ],
+   "nodes": [
+    "Leaves"
    ],
    "animations": []
   }

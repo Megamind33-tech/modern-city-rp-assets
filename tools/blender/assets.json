@@ -454,6 +454,132 @@
    }
   },
   {
+   "id": "ground_grass_tile",
+   "category": "env",
+   "batch": "C",
+   "generator": "ground_grass_tile",
+   "params": {},
+   "purpose": "10x10 m grass ground tile (edges flat for tiling)",
+   "budget": 600,
+   "hard_surface": false,
+   "ao": false
+  },
+  {
+   "id": "ground_garden",
+   "category": "env",
+   "batch": "C",
+   "generator": "ground_garden",
+   "params": {},
+   "purpose": "8x8 m front garden: lawn, full-depth path at x=-1.7 m, flower bed edges",
+   "budget": 600,
+   "hard_surface": false,
+   "ao_ground": false,
+   "ao_strength": 0.35
+  },
+  {
+   "id": "road_straight_8m",
+   "category": "env",
+   "batch": "C",
+   "generator": "road_straight_8m",
+   "params": {},
+   "purpose": "Road tile 8 m along Z: 8 m carriageway + 1.6 m pavements, kerbs, dashed centre (seamless)",
+   "budget": 400,
+   "bevel": 0,
+   "ao_ground": false,
+   "ao_strength": 0.35
+  },
+  {
+   "id": "road_junction_T",
+   "category": "env",
+   "batch": "C",
+   "generator": "road_junction_T",
+   "params": {},
+   "purpose": "T-junction tile 11.2x11.2 m: main road along X, lane towards +Z",
+   "budget": 400,
+   "bevel": 0,
+   "ao_ground": false,
+   "ao_strength": 0.35
+  },
+  {
+   "id": "flood_pump",
+   "category": "props",
+   "batch": "C",
+   "generator": "flood_pump",
+   "params": {},
+   "purpose": "Portable flood pump (amber engine, navy frame)",
+   "bevel": 0.01
+  },
+  {
+   "id": "hose_coupling",
+   "category": "props",
+   "batch": "C",
+   "generator": "hose_coupling",
+   "params": {},
+   "purpose": "Hose coupling with two hose stubs (along X)",
+   "bevel": 0.005
+  },
+  {
+   "id": "drain_grate",
+   "category": "props",
+   "batch": "C",
+   "generator": "drain_grate",
+   "params": {},
+   "purpose": "Road drain grate (flush, 0.7x0.5)",
+   "bevel": 0,
+   "ao_ground": false
+  },
+  {
+   "id": "cellar_hatch",
+   "category": "props",
+   "batch": "C",
+   "generator": "cellar_hatch",
+   "params": {},
+   "purpose": "Cellar hatch in HOUSE local space (front wall, left of door)",
+   "bevel": 0.01
+  },
+  {
+   "id": "radio_handset",
+   "category": "props",
+   "batch": "C",
+   "generator": "radio_handset",
+   "params": {},
+   "purpose": "Crew radio handset (~0.2 m, oversized)",
+   "bevel": 0.004
+  },
+  {
+   "id": "hedge_section",
+   "category": "props",
+   "batch": "C",
+   "generator": "hedge_section",
+   "params": {},
+   "purpose": "Hedge 2.0 m along X",
+   "hard_surface": false
+  },
+  {
+   "id": "fence_section",
+   "category": "props",
+   "batch": "C",
+   "generator": "fence_section",
+   "params": {},
+   "purpose": "White picket fence, 2.0 m along X"
+  },
+  {
+   "id": "garden_wall",
+   "category": "props",
+   "batch": "C",
+   "generator": "garden_wall",
+   "params": {},
+   "purpose": "Brick garden wall 2.0 m along X"
+  },
+  {
+   "id": "gate",
+   "category": "props",
+   "batch": "C",
+   "generator": "gate",
+   "params": {},
+   "purpose": "Garden gate 1.0 m between posts; Gate node hinged at x=-0.47"
+  },
+  {
    "id": "lamp_post",
    "category": "props",
    "batch": "C",
@@ -487,12 +613,12 @@
    "hard_surface": false
   },
   {
-   "id": "fence_section",
+   "id": "mailbox",
    "category": "props",
    "batch": "C",
-   "generator": "fence_section",
+   "generator": "mailbox",
    "params": {},
-   "purpose": "White picket fence, 2.0 m along X"
+   "purpose": "Pillar post box"
   },
   {
    "id": "utility_pole",
@@ -501,14 +627,6 @@
    "generator": "utility_pole",
    "params": {},
    "purpose": "Wooden utility pole with crossarm (8 m)"
-  },
-  {
-   "id": "mailbox",
-   "category": "props",
-   "batch": "C",
-   "generator": "mailbox",
-   "params": {},
-   "purpose": "Pillar post box"
   },
   {
    "id": "road_barrier",
@@ -527,22 +645,70 @@
    "purpose": "Station community / job board (interactable)"
   },
   {
-   "id": "resident_car",
+   "id": "bollard",
+   "category": "props",
+   "batch": "C",
+   "generator": "bollard",
+   "params": {},
+   "purpose": "Street bollard 0.93 m"
+  },
+  {
+   "id": "bus_shelter",
+   "category": "props",
+   "batch": "C",
+   "generator": "bus_shelter",
+   "params": {},
+   "purpose": "Bus shelter 3 m (open side faces -Z)"
+  },
+  {
+   "id": "parked_car_a",
    "category": "vehicles",
    "batch": "C",
    "generator": "resident_car",
-   "params": {},
-   "purpose": "Residents' hatchback (front -Z)",
+   "params": {
+    "color": "denim"
+   },
+   "purpose": "Parked resident hatchback A (denim), front -Z",
    "budget": 4000
   },
   {
-   "id": "radio_handset",
+   "id": "parked_car_b",
+   "category": "vehicles",
+   "batch": "C",
+   "generator": "resident_car",
+   "params": {
+    "color": "terracotta"
+   },
+   "purpose": "Parked resident hatchback B (terracotta), front -Z",
+   "budget": 4000
+  },
+  {
+   "id": "wheelie_bin",
    "category": "props",
    "batch": "C",
-   "generator": "radio_handset",
+   "generator": "wheelie_bin",
    "params": {},
-   "purpose": "Crew radio handset (~0.2 m, oversized)",
-   "bevel": 0.004
+   "purpose": "Wheelie bin (handle at back)"
+  },
+  {
+   "id": "puddle_decal",
+   "category": "props",
+   "batch": "C",
+   "generator": "puddle_decal",
+   "params": {},
+   "purpose": "Flat puddle decal (water cell), ~1.6x1.1 m, y=0.006",
+   "hard_surface": false,
+   "ao": false
+  },
+  {
+   "id": "leaf_litter",
+   "category": "props",
+   "batch": "C",
+   "generator": "leaf_litter",
+   "params": {},
+   "purpose": "Flat leaf scatter 2x2 m",
+   "hard_surface": false,
+   "ao": false
   }
  ]
 }

@@ -58,6 +58,10 @@ static func condition_met(c: Dictionary, model) -> bool:
 			return model.incidents.active.get("def_id", "") == c["value"]
 		"complication":
 			return model.incidents.active.get("complications", []).has(c["id"])
+		"rank_min":
+			return int(model.rank().get("rank", 1)) >= int(c["value"])
+		"project_done":
+			return model.projects_done.has(c["value"])
 		"relationship_min":
 			return model.community.affinity(c["who"]) >= int(c["value"])
 	push_warning("StoryDirector: unknown condition %s" % c["type"])

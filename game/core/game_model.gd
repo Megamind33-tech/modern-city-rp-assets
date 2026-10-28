@@ -17,6 +17,14 @@ var projects_done: Array = []
 var overnight: Array = []
 var last_result: Dictionary = {}
 var fragments: Array = []
+# Progression (see core/progression.gd)
+var xp: int = 0
+var streak: int = 0
+var best_scores: Dictionary = {}
+var goals_today: Array = []
+var goals_done: Array = []
+var calls_today: int = 0
+var stats: Dictionary = {"calls": 0, "gold": 0, "silver": 0, "bronze": 0, "failed": 0}
 
 var world := WorldState.new()
 var economy := Economy.new()
@@ -32,13 +40,57 @@ func new_game(seed_value: int) -> void:
 	economy.money = START_MONEY
 	crew.init_from_defs(DataDB.crew())
 	community.init_from_defs(DataDB.residents())
+	goals_today = Progression.roll_goals(base_seed, day, possible_defs())
 	_fire("new_game")
 
 
 # --- Incident flow -----------------------------------------------------------
 
 func offer_incident() -> Dictionary:
+	if calls_remaining() <= 0:
+		return {}
 	return incidents.offer_next(day, base_seed, world, self)
+
+
+## Incident types that could still be offered (used to avoid impossible shift goals).
+func possible_defs() -> Array:
+	var out: Array = []
+	var done: Array = incidents.history.map(func(h: Dictionary) -> String: return h["def_id"])
+	for id in incidents.defs:
+		var d: Dictionary = incidents.defs[id]
+		if int(d.get("phase", 1)) > 1:
+			continue
+		if d.get("story", false):
+			if done.has(id):
+				continue
+			var ok := true
+			for c in d.get("eligible", []):
+				if not StoryDirector.condition_met(c, self):
+					ok = false
+			if not ok:
+				continue
+		out.append(id)
+	return out
+
+
+func rank() -> Dictionary:
+	return Progression.rank_for(xp)
+
+
+func calls_per_shift() -> int:
+	return int(rank().get("calls_per_shift", 2))
+
+
+func calls_remaining() -> int:
+	return maxi(0, calls_per_shift() - calls_today)
+
+
+## Technique counters reported by sites (chain stalls, missed pump pulls, ...).
+func note(stat: String, delta: int = 1) -> void:
+	var inst := incidents.active
+	if inst.is_empty() or inst["state"] != IncidentDirector.ON_SCENE:
+		return
+	inst["flags"][stat] = int(inst["flags"].get(stat, 0)) + delta
 
 
 func dispatch(mode: String) -> Dictionary:
@@ -107,6 +159,8 @@ func tick(dt: float) -> void:
 			continue
 		var key: String = "auto_" + t["id"]
 		var rate := 1.25 if inst["flags"].get("tomas_helps", false) else 1.0
+		if t["id"] == "pump_out" and int(equipment.get("pump", 1)) >= 2:
+			rate *= 1.3
 		inst["flags"][key] = float(inst["flags"].get(key, 0.0)) + dt * rate
 		if float(inst["flags"][key]) >= float(t["auto_seconds"]):
 			var r := progress_task(t["id"], {"by": "auto"})
@@ -126,6 +180,19 @@ func resolve(outcome: String, reason: String) -> Dictionary:
 		return {}
 	var def: Dictionary = incidents.defs[inst["def_id"]]
 	var payout := Economy.mission_payout(def, inst)
+	var graded := Progression.grade(def, inst)
+	var rank_before: Dictionary = rank()
+	# Clean streak: consecutive successful, safe calls raise council funding.
+	if outcome == "success" and not inst["flags"].get("unsafe_cut", false):
+		streak += 1
+	else:
+		streak = 0
+	var pdata := Progression.data()
+	if streak >= 2:
+		var pct := int(pdata["streak_bonus_pct"]) * mini(streak, int(pdata["streak_cap"]))
+		var bonus := int(round(float(payout["lines"][0]["amount"]) * pct / 100.0))
+		payout["lines"].insert(payout["lines"].size() - 1, {"label": "Clean streak ×%d (+%d%%)" % [streak, pct], "amount": bonus})
+		payout["total"] = int(payout["total"]) + bonus
 	var total := int(payout["total"])
 	if total >= 0:
 		economy.earn(total, "Callout %s" % inst["uid"], day)
@@ -134,7 +201,36 @@ func resolve(outcome: String, reason: String) -> Dictionary:
 	var effects: Array = def["success_effects"] if outcome == "success" else def["failure_effects"]
 	apply_effects(effects, inst["context"])
 	crew.apply_mission(inst)
+	var xp_gain := int(graded["xp"])
+	var goals_completed: Array = []
+	for gid in goals_today:
+		if goals_done.has(gid):
+			continue
+		var g := Progression.goal(gid)
+		if Progression.goal_met(g, inst, graded, streak):
+			goals_done.append(gid)
+			economy.earn(int(g["reward"]), "Shift goal: %s" % g["text"], day)
+			xp_gain += int(g["xp"])
+			goals_completed.append({"text": g["text"], "reward": int(g["reward"]), "xp": int(g["xp"])})
+	xp += xp_gain
+	var prev_best := int(best_scores.get(inst["def_id"], -1))
+	var new_best: bool = outcome == "success" and int(graded["score"]) > prev_best
+	if new_best:
+		best_scores[inst["def_id"]] = int(graded["score"])
+	calls_today += 1
+	stats["calls"] = int(stats.get("calls", 0)) + 1
+	var medal_key: String = graded["medal"] if graded["medal"] != "" else ("failed" if outcome != "success" else "")
+	if medal_key != "":
+		stats[medal_key] = int(stats.get(medal_key, 0)) + 1
+	var rank_after: Dictionary = rank()
 	last_result = {
+		"grade": graded,
+		"xp_gained": xp_gain,
+		"new_best": new_best,
+		"prev_best": prev_best,
+		"goals_completed": goals_completed,
+		"rank_up": rank_after if int(rank_after["rank"]) > int(rank_before["rank"]) else {},
+		"streak": streak,
 		"uid": inst["uid"],
 		"def_id": inst["def_id"],
 		"title": inst["title"],
@@ -181,10 +277,13 @@ func end_shift() -> Dictionary:
 	if reason != "":
 		return {"ok": false, "reason": reason}
 	day += 1
+	calls_today = 0
 	for o in overnight:
 		world.set_value(o["key"], o["value"])
 	overnight.clear()
 	crew.rest_day()
+	goals_today = Progression.roll_goals(base_seed, day, possible_defs())
+	goals_done.clear()
 	_fire("day_start")
 	return {"ok": true, "reason": ""}
 
@@ -205,6 +304,37 @@ func available_projects() -> Array:
 				ok = false
 		if ok:
 			out.append(defs[id])
+	return out
+
+
+## Not-yet-available projects whose only missing requirement is progression (rank or a
+## prerequisite upgrade): shown greyed on the board so there is always a visible next goal.
+func locked_projects() -> Array:
+	var out: Array = []
+	var defs := DataDB.projects()
+	var ids := defs.keys()
+	ids.sort()
+	for id in ids:
+		if projects_done.has(id):
+			continue
+		var gated := false
+		var ok := true
+		var reasons: Array = []
+		for c in defs[id].get("requires", []):
+			if StoryDirector.condition_met(c, self):
+				continue
+			if c["type"] == "rank_min":
+				gated = true
+				reasons.append("Rank %d: %s" % [int(c["value"]), Progression.data()["ranks"][int(c["value"]) - 1]["title"]])
+			elif c["type"] == "project_done":
+				gated = true
+				reasons.append("Needs: %s" % defs[c["value"]]["label"])
+			else:
+				ok = false
+		if gated and ok:
+			var p: Dictionary = defs[id].duplicate()
+			p["locked_reason"] = ", ".join(reasons)
+			out.append(p)
 	return out
 
 
@@ -244,6 +374,10 @@ func apply_effects(effects: Array, ctx: Dictionary) -> void:
 				crew.adjust(who, String(e["stat"]), int(e["delta"]))
 			"equipment":
 				equipment[key] = int(e["value"])
+			"skill":
+				var m := crew.get_member(who)
+				if not m.is_empty():
+					m["skills"][e["skill"]] = clampi(int(m["skills"].get(e["skill"], 0)) + int(e["delta"]), 0, 100)
 			_:
 				push_warning("GameModel: unknown effect %s" % e["type"])
 
@@ -281,6 +415,13 @@ func to_dict() -> Dictionary:
 		"community": community.to_dict(),
 		"incidents": incidents.to_dict(),
 		"story": story.to_dict(),
+		"xp": xp,
+		"streak": streak,
+		"best_scores": best_scores.duplicate(),
+		"goals_today": goals_today.duplicate(),
+		"goals_done": goals_done.duplicate(),
+		"calls_today": calls_today,
+		"stats": stats.duplicate(),
 	}
 
 
@@ -305,3 +446,14 @@ func from_dict(d: Dictionary) -> void:
 	community.from_dict(d.get("community", {}))
 	incidents.from_dict(d.get("incidents", {}))
 	story.from_dict(d.get("story", {}))
+	xp = int(d.get("xp", 0))
+	streak = int(d.get("streak", 0))
+	calls_today = int(d.get("calls_today", 0))
+	goals_today = d.get("goals_today", []).duplicate()
+	goals_done = d.get("goals_done", []).duplicate()
+	best_scores = {}
+	for k in d.get("best_scores", {}):
+		best_scores[k] = int(d["best_scores"][k])
+	stats = {}
+	for k in d.get("stats", {}):
+		stats[k] = int(d["stats"][k])

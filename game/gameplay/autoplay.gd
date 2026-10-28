@@ -98,22 +98,45 @@ func drain_dialogue() -> void:
 ## Walks straight at the target; when blocked (e.g. by the truck body) it sidesteps
 ## perpendicular for a moment, alternating sides, like a player steering around.
 func walk_to(p: Vector3, within: float = 0.5, timeout: float = 25.0) -> bool:
-	# Route around the parked truck via its nearest corner, as a player would.
+	# Route around the parked truck through its corners (shortest path), as a player would.
 	var tr: Truck = main.truck
 	var from: Vector3 = main.player.global_position
 	if not tr.driving and _crosses_truck(from, p):
-		var best := Vector3.ZERO
-		var best_len := INF
-		for cx in [-2.2, 2.2]:
-			for cz in [-4.2, 4.2]:
-				var c: Vector3 = tr.global_transform * Vector3(cx, 0, cz)
-				var l := from.distance_to(c) + c.distance_to(p)
-				if l < best_len and not _crosses_truck(from, c):
-					best = c
-					best_len = l
-		if best_len < INF:
-			await _walk_direct(best, 0.6, timeout)
+		for wp in _route_around_truck(from, p):
+			await _walk_direct(wp, 0.6, timeout)
 	return await _walk_direct(p, within, timeout)
+
+
+func _route_around_truck(a: Vector3, b: Vector3) -> Array:
+	var nodes: Array = [a, b]
+	for c in [Vector3(-2.3, 0, -4.3), Vector3(2.3, 0, -4.3), Vector3(2.3, 0, 4.3), Vector3(-2.3, 0, 4.3)]:
+		nodes.append(main.truck.global_transform * c)
+	var dist: Array = []
+	var prev: Array = []
+	for i in nodes.size():
+		dist.append(INF)
+		prev.append(-1)
+	dist[0] = 0.0
+	var open: Array = range(nodes.size())
+	while not open.is_empty():
+		var u: int = open[0]
+		for o in open:
+			if dist[o] < dist[u]:
+				u = o
+		open.erase(u)
+		for v in open:
+			if _crosses_truck(nodes[u], nodes[v]):
+				continue
+			var d: float = dist[u] + (nodes[u] as Vector3).distance_to(nodes[v])
+			if d < dist[v]:
+				dist[v] = d
+				prev[v] = u
+	var path: Array = []
+	var cur: int = prev[1]
+	while cur > 0:
+		path.push_front(nodes[cur])
+		cur = prev[cur]
+	return path
 
 
 func _crosses_truck(a: Vector3, b: Vector3) -> bool:
@@ -156,7 +179,9 @@ func _walk_direct(p: Vector3, within: float, timeout: float) -> bool:
 			stuck = 0.0
 		if t > timeout:
 			main.bot_input = Vector2.ZERO
-			fail("could not walk to %s (stuck at %s)" % [p, main.player.global_position])
+			var col: KinematicCollision3D = main.player.get_last_slide_collision()
+			var what: String = "nothing" if col == null else "%s/%s" % [(col.get_collider() as Node).get_parent().name, (col.get_collider() as Node).name]
+			fail("could not walk to %s (stuck at %s, touching %s)" % [p, main.player.global_position, what])
 			main.player.teleport(p)
 			return false
 	return false
@@ -301,6 +326,9 @@ func _run() -> void:
 	main._action_up()
 	expect(m.last_result.get("outcome", "") == "success", "incident resolved as success")
 	expect(m.world.get_value("%s.road" % inst["location"]) == "open", "road recorded open in world state")
+	var g: Dictionary = m.last_result.get("grade", {})
+	expect(g.get("medal", "") != "", "graded %d/100 → %s medal" % [int(g.get("score", 0)), g.get("medal", "none")])
+	expect(m.xp > 0 and m.last_result.get("new_best", false), "XP earned (%d) and personal best set" % m.xp)
 	await shot("09_result")
 
 	# --- Return ---

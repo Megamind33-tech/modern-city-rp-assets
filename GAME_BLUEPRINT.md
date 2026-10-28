@@ -7,3 +7,13 @@
 **Failure:** timer or abandon → roof damage persists, road closed overnight, relationship dips, repair project unlocks.
 **Progression:** funds → equipment (chainsaw service: faster, less binding) and community projects; crew xp/trust/morale.
 **Monetisation stance:** free-to-start, cosmetics/story chapters later; no ads, no timers, never monetise injury or delay.
+
+## Why players come back
+| Loop | Length | Hook | Implemented |
+|---|---|---|---|
+| Call mastery | 2–5 min | Medal, score, par time, personal best | Yes |
+| Shift | 10–20 min | 3 seeded goals, 2–4 calls, streak bonus | Yes |
+| Station | days | XP ranks → upgrades that change play; locked targets visible | Yes |
+| Community | days | Residents remember; damage/repair persists; story incidents | Yes |
+| Mystery | week | Drilled-oak thread, story chapters | Seeded |
+Design rules: rewards for skill and care rather than time spent; never punish absence; no waits to sell.

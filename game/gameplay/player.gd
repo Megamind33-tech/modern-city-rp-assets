@@ -21,7 +21,7 @@ var has_saw := false:
 			saw_mesh.visible = v
 var focus: Interactable = null
 
-var visual: Node3D
+var visual: CharacterVisual
 var saw_mesh: Node3D
 var carry_point: Node3D
 var _held: Interactable = null
@@ -37,7 +37,7 @@ func _ready() -> void:
 	shape.shape = cap
 	shape.position.y = 0.85
 	add_child(shape)
-	visual = Build.person(self, Build.C_RED)
+	visual = CharacterVisual.create(self, "crew_player", Build.C_RED)
 	saw_mesh = Node3D.new()
 	visual.add_child(saw_mesh)
 	saw_mesh.position = Vector3(0.4, 0.8, -0.35)
@@ -65,8 +65,17 @@ func _physics_process(dt: float) -> void:
 	velocity.z = dir.z * speed
 	velocity.y = 0.0 if is_on_floor() else velocity.y - 20.0 * dt
 	move_and_slide()
-	if dir.length() > 0.1:
+	var moving := dir.length() > 0.1
+	if moving:
 		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-dir.x, -dir.z), minf(1.0, 12.0 * dt))
+	if visual.has_anim():
+		if _held != null and _held.hold and not moving:
+			visual.play("work")
+		elif moving:
+			visual.play("carry_walk" if carrying else "walk", clampf(dir.length() * 1.1, 0.6, 1.2))
+		else:
+			visual.play("idle")
+	elif moving:
 		_walk_t += dt * 10.0
 		visual.position.y = absf(sin(_walk_t)) * 0.07
 	else:

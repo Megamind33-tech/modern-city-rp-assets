@@ -276,9 +276,10 @@ def proc_clip(arm, base, name, fwd, length=60):
             push = 0.05 * math.sin(t * math.tau * 2)
             buzz = 0.012 * math.sin(t * math.tau * 23)
             rot(arm, "spine_02", pitch_axis, 0.18 + push)
-            for sd, bs, k in ((L, "_l", 0.25), (R, "_r", 0.12)):
-                aim(arm, "upperarm" + bs, sd * k - up * 0.75 + fwd * 0.55)
-                aim(arm, "lowerarm" + bs, -sd * 0.15 - up * (0.35 + buzz * 3) + fwd * 1.0)
+            for sd, bs, k in ((L, "_l", 0.32), (R, "_r", 0.22)):
+                aim(arm, "upperarm" + bs, sd * k - up * 0.6 + fwd * 0.75)
+                aim(arm, "lowerarm" + bs, -sd * 0.3 - up * (0.2 + buzz * 3) + fwd * 1.0)
+                aim(arm, "hand" + bs, -sd * 0.2 - up * 0.1 + fwd * 1.0)
             rot(arm, "Head", pitch_axis, 0.25)
         frames.append({pb.name: (pb.location.copy(), pb.rotation_quaternion.copy()) for pb in arm.pose.bones})
     act = bpy.data.actions.new(name)

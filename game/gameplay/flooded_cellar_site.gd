@@ -10,6 +10,7 @@ const DRAIN := Vector3(3.4, 0, -8.0)
 const HATCH := Vector3(7.9, 0, 0.6)
 const POOL := Vector3(6.6, 0, 2.0)
 const GREEN_MIN := 0.7
+const GREEN_MIN_SERVICED := 0.6  # rebuilt pump (primer bulb) is more forgiving
 const GREEN_MAX := 0.95
 const PULL_COOLDOWN := 0.5
 
@@ -172,7 +173,7 @@ func _build_prime() -> void:
 	_prime_it.prompt_fn = func() -> String: return "Pull when\nin the green"
 	_prime_it.on_press = func() -> void:
 		_cooldown = PULL_COOLDOWN
-		if gauge >= GREEN_MIN and gauge <= GREEN_MAX:
+		if _in_green():
 			var r := model.progress_task("prime_pump")
 			if _report(r):
 				Audio.play("thud", -6.0, 0.7)
@@ -183,6 +184,7 @@ func _build_prime() -> void:
 					message.emit("Good pull — again!")
 		else:
 			Audio.play("stall", -8.0, 1.4)
+			model.note("missed_pulls")
 			message.emit("Too early — pull in the green")
 
 
@@ -195,14 +197,16 @@ func _build_make_safe() -> void:
 
 
 func _build_people() -> void:
-	var rosa := Build.person(self, Color(0.43, 0.29, 0.42), Color(0.85, 0.64, 0.49))
+	var rosa := CharacterVisual.create(self, "resident_rosa", Color(0.43, 0.29, 0.42), Color(0.85, 0.64, 0.49))
 	rosa.position = Vector3(8.0, 0, 5.6)
 	rosa.rotation.y = PI / 2
+	rosa.play("talk")
 	Build.label(rosa, "Rosa", Vector3(0, 2.2, 0), 28)
 	if inst()["flags"].get("tomas_helps", false):
-		var tomas := Build.person(self, Color(0.30, 0.42, 0.56), Color(0.85, 0.64, 0.49))
+		var tomas := CharacterVisual.create(self, "resident_tomas", Color(0.30, 0.42, 0.56), Color(0.85, 0.64, 0.49))
 		tomas.position = HATCH + Vector3(-0.6, 0, -1.2)
-		tomas.scale = Vector3.ONE * 0.7
+		if not tomas.has_anim():
+			tomas.scale = Vector3.ONE * 0.7
 		tomas.rotation.y = PI / 2
 		Build.label(tomas, "Tomás (torch)", Vector3(0, 2.6, 0), 34)
 		var torch := Build.cyl(tomas, 0.06, 0.35, Vector3(0.35, 1.0, -0.2), Build.C_AMBER)
@@ -247,11 +251,16 @@ func _set_water(level: float) -> void:
 
 func meter() -> Dictionary:
 	if player.focus == _prime_it and _prime_it.is_available():
-		var good := gauge >= GREEN_MIN and gauge <= GREEN_MAX
+		var good := _in_green()
 		return {"value": gauge, "label": "PULL IN THE GREEN", "color": Color(0.4, 0.85, 0.4) if good else Color(0.95, 0.66, 0.23)}
 	if model.incidents.is_task_done("prime_pump") and not model.incidents.is_task_done("pump_out"):
 		return {"value": model.auto_fraction("pump_out"), "label": "PUMPING", "color": Color(0.37, 0.62, 0.75)}
 	return {"value": -1.0, "label": ""}
+
+
+func _in_green() -> bool:
+	var lo := GREEN_MIN_SERVICED if int(model.equipment.get("pump", 1)) >= 2 else GREEN_MIN
+	return gauge >= lo and gauge <= GREEN_MAX
 
 
 func stop_actions() -> void:
