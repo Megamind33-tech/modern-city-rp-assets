@@ -1,0 +1,23 @@
+{
+  "locations": [
+    {
+      "id": "station",
+      "name": "Kettleford Station",
+      "anchor": [0, -16]
+    },
+    {
+      "id": "alder_lane",
+      "name": "Alder Lane",
+      "anchor": [60, 42],
+      "house": "house_mendes",
+      "resident": "rosa_mendes"
+    },
+    {
+      "id": "mill_road",
+      "name": "Mill Road",
+      "anchor": [120, 38],
+      "house": "house_penhallow",
+      "resident": "arthur_penhallow"
+    }
+  ]
+}

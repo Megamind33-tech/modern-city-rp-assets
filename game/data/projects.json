@@ -1,0 +1,40 @@
+{
+  "projects": [
+    {
+      "id": "service_chainsaw",
+      "label": "Priya services the chainsaw",
+      "description": "New chain, sharpened and tuned. Cuts faster and binds less.",
+      "cost": 150,
+      "requires": [],
+      "effects": [
+        {"type": "equipment", "key": "chainsaw", "value": 2},
+        {"type": "crew", "who": "priya_nair", "stat": "morale", "delta": 5}
+      ]
+    },
+    {
+      "id": "repair_roof_house_mendes",
+      "label": "Patch the Mendes roof",
+      "description": "The crew spends an evening tarping and patching Rosa's roof.",
+      "cost": 220,
+      "requires": [{"type": "world", "key": "house_mendes.roof", "value": "damaged"}],
+      "effects": [
+        {"type": "world", "key": "house_mendes.roof", "value": "repaired"},
+        {"type": "relationship", "who": "rosa_mendes", "delta": 20},
+        {"type": "memory", "who": "rosa_mendes", "memory": "roof_patched_by_crew"},
+        {"type": "flag", "key": "roof_patched_house_mendes", "value": true}
+      ]
+    },
+    {
+      "id": "repair_roof_house_penhallow",
+      "label": "Patch the Penhallow roof",
+      "description": "Arthur supervises. Loudly.",
+      "cost": 220,
+      "requires": [{"type": "world", "key": "house_penhallow.roof", "value": "damaged"}],
+      "effects": [
+        {"type": "world", "key": "house_penhallow.roof", "value": "repaired"},
+        {"type": "relationship", "who": "arthur_penhallow", "delta": 20},
+        {"type": "flag", "key": "roof_patched_house_penhallow", "value": true}
+      ]
+    }
+  ]
+}

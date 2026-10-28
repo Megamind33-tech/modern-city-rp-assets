@@ -1,0 +1,36 @@
+{
+  "crew": [
+    {
+      "id": "maren_holt",
+      "name": "Maren Holt",
+      "role": "Captain",
+      "skills": {"cutting": 70, "driving": 60, "safety": 90, "mechanics": 35},
+      "morale": 55,
+      "trust": 30,
+      "on_scene": false
+    },
+    {
+      "id": "theo_vance",
+      "name": "Theo Vance",
+      "role": "Rookie",
+      "skills": {"cutting": 35, "driving": 50, "safety": 45, "mechanics": 20},
+      "morale": 80,
+      "trust": 50,
+      "on_scene": true
+    },
+    {
+      "id": "priya_nair",
+      "name": "Priya Nair",
+      "role": "Mechanic",
+      "skills": {"cutting": 40, "driving": 55, "safety": 60, "mechanics": 90},
+      "morale": 60,
+      "trust": 45,
+      "on_scene": false
+    }
+  ],
+  "residents": [
+    {"id": "rosa_mendes", "name": "Rosa Mendes", "home": "house_mendes", "affinity": 10},
+    {"id": "tomas_mendes", "name": "Tomás Mendes", "home": "house_mendes", "affinity": 10},
+    {"id": "arthur_penhallow", "name": "Arthur Penhallow", "home": "house_penhallow", "affinity": 0}
+  ]
+}

@@ -1,0 +1,12 @@
+# Godot
+game/.godot/
+game/*.import
+*.translation
+# Build outputs
+build/
+*.apk
+*.aab
+*.keystore
+*.jks
+# Logs
+logs/

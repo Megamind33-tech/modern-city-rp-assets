@@ -1,0 +1,139 @@
+{
+  "incidents": [
+    {
+      "id": "fallen_tree",
+      "category": "fallen_tree",
+      "phase": 1,
+      "title": "Tree down across {location_name}",
+      "briefing": "{resident_name} reports a storm-felled tree blocking {location_name}. Nobody hurt, but the road is shut and the weather is turning.",
+      "site": "fallen_tree",
+      "location_options": [
+        "alder_lane",
+        "mill_road"
+      ],
+      "severity_range": [
+        1,
+        3
+      ],
+      "weather_options": [
+        "gusty_rain",
+        "heavy_rain",
+        "clearing"
+      ],
+      "time_limit": 300,
+      "base_reward": 360,
+      "fuel_cost": 40,
+      "complications": [
+        {
+          "id": "live_wire",
+          "label": "A service line came down with the tree",
+          "chance": 0.45,
+          "min_severity": 2
+        }
+      ],
+      "tasks": [
+        {
+          "id": "secure_area",
+          "label": "Cone off the scene",
+          "optional": true,
+          "delegatable": true
+        },
+        {
+          "id": "isolate_power",
+          "label": "Radio the utility to isolate the line",
+          "requires_complication": "live_wire"
+        },
+        {
+          "id": "cut_trunk",
+          "label": "Cut the trunk into sections",
+          "equipment": "chainsaw",
+          "count_by_severity": [
+            2,
+            3,
+            4
+          ],
+          "after": [
+            "isolate_power"
+          ]
+        },
+        {
+          "id": "clear_debris",
+          "label": "Stack the logs off the road",
+          "count_by_severity": [
+            2,
+            3,
+            4
+          ],
+          "progress_with": "cut_trunk"
+        },
+        {
+          "id": "reopen_road",
+          "label": "Reopen the road",
+          "after": [
+            "cut_trunk",
+            "clear_debris"
+          ]
+        }
+      ],
+      "success_effects": [
+        {
+          "type": "world",
+          "key": "{location}.road",
+          "value": "open"
+        },
+        {
+          "type": "world",
+          "key": "{location}.log_pile",
+          "value": true
+        },
+        {
+          "type": "relationship",
+          "who": "{resident}",
+          "delta": 15
+        },
+        {
+          "type": "memory",
+          "who": "{resident}",
+          "memory": "tree_cleared_{location}"
+        },
+        {
+          "type": "flag",
+          "key": "helped_{resident}",
+          "value": true
+        }
+      ],
+      "failure_effects": [
+        {
+          "type": "world",
+          "key": "{house}.roof",
+          "value": "damaged"
+        },
+        {
+          "type": "world",
+          "key": "{location}.road",
+          "value": "closed"
+        },
+        {
+          "type": "overnight",
+          "key": "{location}.road",
+          "value": "open"
+        },
+        {
+          "type": "relationship",
+          "who": "{resident}",
+          "delta": -5
+        },
+        {
+          "type": "memory",
+          "who": "{resident}",
+          "memory": "roof_lost_{location}"
+        },
+        {
+          "type": "flag",
+          "key": "roof_damaged_{resident}",
+          "value": true
+        }
+      ]
+    }
+  ]
+}
