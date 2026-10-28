@@ -25,3 +25,22 @@ Newest entries at the bottom. Each entry: what changed, why, evidence.
 - Director approved Living Diorama + latest Blender (5.2). Wrote `ART_BIBLE.md`: one 8×8 palette atlas shared by every asset (one material → batching, consistent look across Kenney/Quaternius/custom sources), soft bevels, ~5-head characters, colour reserved for hazards/emergency kit, damage as swap-in pieces.
 - **Global-work strategy (one-day deadline):** no per-asset hand work. A single Blender pipeline script normalises *any* source model (scale, pivot, axis, re-palette to atlas, bevel/normals, AO→vertex colour, budget check, LOD, glb export, manifest row, contact-sheet render). Parametric Blender generators produce families (houses, trees, station) in one pass. Godot side loads assets by logical id via `AssetLib` with primitive fallback, so gameplay never breaks while art lands.
 - Second agent ("asset hand") owns sourcing, Blender pipeline, baking and import; I own integration, Android build, gameplay and docs. Disjoint file ownership to avoid conflicts.
+
+## Day 1 · 12:25 — Android pipeline: first APK
+- `tools/build_android.sh`: writes SDK/JDK paths into Godot editor settings, generates a local debug keystore (never committed), exports headlessly, verifies the signature with apksigner.
+- Result: `build/EmergencyCrew-debug.apk` — 57.7 MB, `org.emergencycrew.prototype` 0.1.0, arm64-v8a + armeabi-v7a (32-bit kept for cheap phones), compile/target SDK 36, debug-signed. Not yet run on hardware: no device or emulator available here (RISKS R1).
+
+## Day 1 · 12:40 — Second hands-on family: flooded cellar
+- Story incident on day 2 at Rosa's: carry the pump to the cellar steps → couple hose sections to the drain → clear the drain grate → **pull-start in rhythm** (pull while the needle is in the green; early pulls fail) → water visibly drops while it pumps → check the cellar is safe. Fuse-box hazard means radioing the utility first.
+- **Consequences carry forward:** if the tree beat you and Rosa's roof is still damaged, the tarp leaks — severity +1 and Rosa says so. If you saved her road, Tomás turns up with a torch and pumping runs 25% faster. Authored outcome texts are data, not code.
+- Generalised the model rather than writing a second rules engine: incident eligibility conditions, once-only story incidents that take priority, condition-driven modifiers, and timed "auto" tasks the player can't skip by hand (a test caught that gap).
+- Refactored sites onto a shared `IncidentSite` base (cones, meter, messages, hold-interactions), so the next incident type is mostly authoring.
+
+## Day 1 · 13:10 — One-command verification
+- `tools/test.sh [seeds]`: import (registers new classes — a missed import cost a hung run), 21 unit tests, then autoplay in drive and quick-dispatch modes per seed. The three-day autoplay plays the tree rescue, the day-2 flood and a day-3 failure end to end (49 checks on seed 2).
+- Gave the bot shortest-path routing around the parked truck. This was a test-harness fix: players walk around it naturally.
+
+## Day 1 · 13:20 — Batch A art integrated
+- The asset hand delivered Batch A through the Blender 5.2 pipeline: station hall, 4 house variants (+ damage/patch overlays authored on the shared roof slope), 3 tree types, bush, cone, chainsaw, log section, root plate, canopy, log pile, rescue truck with separate light-bar nodes. 24.3k tris total, all within budget. Contact sheet: `docs/asset_renders/A.png`.
+- Every glb imports onto the two shared materials `palette.tres` / `palette_emissive.tres`, so `AssetLib` no longer overrides materials.
+- Town, truck, chainsaw, cones and tree-incident props now load art by id; houses rotate to face their street; primitives remain as fallback (`-- --no-art` for A/B perf comparisons).

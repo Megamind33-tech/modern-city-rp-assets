@@ -22,7 +22,7 @@ var truck: Truck
 var theo: CrewAgent
 var rig: CameraRig
 var hud: Hud
-var site: FallenTreeSite
+var site: IncidentSite
 var sun: DirectionalLight3D
 var env: Environment
 var beacon: Node3D
@@ -200,7 +200,8 @@ func _place_at_site(inst: Dictionary) -> void:
 
 func _spawn_site() -> void:
 	_clear_site()
-	site = FallenTreeSite.new()
+	var def_site: String = model.incidents.defs[model.incidents.active["def_id"]].get("site", "fallen_tree")
+	site = FloodedCellarSite.new() if def_site == "flooded_cellar" else FallenTreeSite.new()
 	site.name = "Site"
 	add_child(site)
 	site.setup(model, player, _site_anchor(model.incidents.active))
@@ -266,23 +267,10 @@ func _arrive() -> void:
 func _on_resolved(result: Dictionary) -> void:
 	player.release()
 	if site:
-		site._stop_cut()
+		site.stop_actions()
 	Audio.play("chime" if result["outcome"] == "success" else "stall", -4.0)
-	hud.open_result(result, _consequence_text(result))
+	hud.open_result(result, model.outcome_text(result))
 	Game.save_game()
-
-
-func _consequence_text(result: Dictionary) -> String:
-	var ctx: Dictionary = DataDB.locations()[result["location"]]
-	var who := DataDB.display_name(String(ctx.get("resident", "")))
-	if result["outcome"] == "success":
-		var s := "%s can get the car out again. The logs are stacked on the verge." % who
-		if result["flags"].get("unsafe_cut", false):
-			s += " Maren hasn't forgotten the cones."
-		return s
-	if result["reason"] == "abandoned":
-		return "You pulled the crew off %s. The rest of the oak came down on %s's roof overnight." % [ctx["name"], who]
-	return "The rest of the oak came down on %s's roof. Highways will clear %s overnight." % [who, ctx["name"]]
 
 
 func _on_return(mode: String) -> void:
@@ -608,7 +596,8 @@ func _refresh_hud(blocked: bool) -> void:
 	hud.crew_button.visible = can_order and not truck.driving
 	hud.crew_button.text = "Theo: cone it off"
 	hud.crew_status.text = theo._status.text if site != null else ""
-	hud.set_bind(site.bind_level() if site else -1.0)
+	var meter: Dictionary = site.meter() if site else {"value": -1.0, "label": ""}
+	hud.set_bind(meter["value"], meter["label"], meter.get("color"))
 
 
 func _objective_lines() -> Array:
@@ -631,6 +620,8 @@ func _objective_lines() -> Array:
 				var label: String = t["label"]
 				if int(t["required"]) > 1:
 					label += "  %d/%d" % [int(t["progress"]), int(t["required"])]
+				elif float(t.get("auto_seconds", 0.0)) > 0.0 and model.incidents.check_task(t["id"], {"by": "auto"}) == "":
+					label += "  %d%%" % int(model.auto_fraction(t["id"]) * 100)
 				if t["optional"]:
 					label += "  (recommended)"
 				out.append({"text": ("✔ " if int(t["progress"]) >= int(t["required"]) else "• ") + label, "done": int(t["progress"]) >= int(t["required"])})

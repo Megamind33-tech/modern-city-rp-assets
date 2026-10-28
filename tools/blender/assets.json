@@ -1,0 +1,457 @@
+{
+ "defaults": {
+  "env": {
+   "hard_surface": true,
+   "budget": 3000,
+   "bevel": 0.03,
+   "ao_strength": 0.45
+  },
+  "props": {
+   "hard_surface": true,
+   "budget": 800,
+   "bevel": 0.02
+  },
+  "vehicles": {
+   "hard_surface": true,
+   "budget": 10000,
+   "bevel": 0.025
+  },
+  "characters": {
+   "hard_surface": false,
+   "smooth": true,
+   "ao_strength": 0.35,
+   "ao_distance": 0.25
+  }
+ },
+ "assets": [
+  {
+   "id": "station_hall",
+   "category": "env",
+   "batch": "A",
+   "generator": "station_hall",
+   "params": {},
+   "purpose": "Kettleford emergency station: 2 appliance bays (BayDoor1/2 nodes), tower",
+   "budget": 8000
+  },
+  {
+   "id": "house_a",
+   "category": "env",
+   "batch": "A",
+   "generator": "house",
+   "params": {
+    "walls": "butter",
+    "roof": "slate",
+    "door_col": "door_navy",
+    "door_x": -1.7,
+    "chimney_x": 2.6,
+    "flower_box": true,
+    "seed": 11
+   },
+   "purpose": "Resident house variant A (butter/slate)"
+  },
+  {
+   "id": "house_b",
+   "category": "env",
+   "batch": "A",
+   "generator": "house",
+   "params": {
+    "walls": "sage",
+    "roof": "terracotta",
+    "door_col": "door_green",
+    "door_x": -1.6,
+    "porch": true,
+    "chimney_x": -2.6,
+    "seed": 12
+   },
+   "purpose": "Resident house variant B (sage/terracotta, porch)"
+  },
+  {
+   "id": "house_c",
+   "category": "env",
+   "batch": "A",
+   "generator": "house",
+   "params": {
+    "walls": "peach",
+    "roof": "roof_brown",
+    "door_col": "door_navy",
+    "door_x": -1.7,
+    "bay": true,
+    "chimney_x": 2.4,
+    "seed": 13
+   },
+   "purpose": "Resident house variant C (peach, bay window)"
+  },
+  {
+   "id": "house_d",
+   "category": "env",
+   "batch": "A",
+   "generator": "house",
+   "params": {
+    "walls": "pale_blue",
+    "roof": "slate",
+    "door_col": "door_green",
+    "door_x": -1.7,
+    "bay": true,
+    "porch": true,
+    "chimney_x": -2.6,
+    "plinth": "brick",
+    "seed": 14
+   },
+   "purpose": "Resident house variant D (pale blue, porch + bay window)"
+  },
+  {
+   "id": "roof_damage",
+   "category": "env",
+   "batch": "A",
+   "generator": "roof_damage",
+   "params": {},
+   "purpose": "Storm damage overlay for house_* front roof slope: Tarp + Limb nodes (place at house transform)",
+   "budget": 1200
+  },
+  {
+   "id": "roof_patch",
+   "category": "env",
+   "batch": "A",
+   "generator": "roof_patch",
+   "params": {},
+   "purpose": "Repaired roof patch overlay for house_* (place at house transform)",
+   "budget": 800
+  },
+  {
+   "id": "tree_oak_a",
+   "category": "env",
+   "batch": "A",
+   "generator": "tree_oak",
+   "params": {
+    "seed": 21,
+    "height": 8.0,
+    "spread": 3.4
+   },
+   "purpose": "Large oak tree",
+   "hard_surface": false,
+   "budget": 1200
+  },
+  {
+   "id": "tree_oak_b",
+   "category": "env",
+   "batch": "A",
+   "generator": "tree_oak",
+   "params": {
+    "seed": 22,
+    "height": 7.0,
+    "spread": 3.8,
+    "trunk_h": 2.6,
+    "blobs": 8,
+    "trunk_r": 0.48
+   },
+   "purpose": "Oak tree variant, broader",
+   "hard_surface": false,
+   "budget": 1200
+  },
+  {
+   "id": "tree_street",
+   "category": "env",
+   "batch": "A",
+   "generator": "tree_street",
+   "params": {},
+   "purpose": "Street tree with pit grate + stake",
+   "hard_surface": false,
+   "budget": 1200
+  },
+  {
+   "id": "bush_a",
+   "category": "env",
+   "batch": "A",
+   "generator": "bush",
+   "params": {},
+   "purpose": "Flowering garden bush",
+   "budget": 800,
+   "hard_surface": false
+  },
+  {
+   "id": "traffic_cone",
+   "category": "props",
+   "batch": "A",
+   "generator": "traffic_cone",
+   "params": {},
+   "purpose": "Traffic cone 0.7 m (hazard marker)",
+   "budget": 150,
+   "bevel": 0
+  },
+  {
+   "id": "chainsaw",
+   "category": "props",
+   "batch": "A",
+   "generator": "chainsaw",
+   "params": {},
+   "purpose": "Crew chainsaw tool (amber body, bar points front)",
+   "bevel": 0.01
+  },
+  {
+   "id": "log_section",
+   "category": "props",
+   "batch": "A",
+   "generator": "log_section",
+   "params": {},
+   "purpose": "Cut log 1.0 m along X, r 0.36 (carry/stack item)",
+   "budget": 300,
+   "bevel": 0.02
+  },
+  {
+   "id": "root_plate",
+   "category": "props",
+   "batch": "A",
+   "generator": "root_plate",
+   "params": {},
+   "purpose": "Upturned root plate of fallen oak",
+   "hard_surface": false
+  },
+  {
+   "id": "canopy_cluster",
+   "category": "props",
+   "batch": "A",
+   "generator": "canopy_cluster",
+   "params": {},
+   "purpose": "Fallen oak crown (~4 m) to be cleared",
+   "hard_surface": false
+  },
+  {
+   "id": "log_pile",
+   "category": "props",
+   "batch": "A",
+   "generator": "log_pile",
+   "params": {},
+   "purpose": "Pile of 4 cut logs (delivery/stack target)",
+   "budget": 800,
+   "bevel": 0.02
+  },
+  {
+   "id": "rescue_truck",
+   "category": "vehicles",
+   "batch": "A",
+   "generator": "rescue_truck",
+   "params": {},
+   "purpose": "Rescue truck (Body, LightL, LightR nodes)",
+   "budget": 10000
+  },
+  {
+   "id": "crew_player",
+   "category": "characters",
+   "batch": "B",
+   "custom": "characters.build",
+   "purpose": "Player crew member (navy uniform, hi-vis)",
+   "look": {
+    "base": "male",
+    "skin": "skin2",
+    "hair": "hair_dark",
+    "hair_meshes": [
+     "Hair_SimpleParted"
+    ],
+    "top": "uniform_navy",
+    "bottom": "uniform_navy",
+    "shoes": "tyre",
+    "hivis": true
+   },
+   "height": 1.75,
+   "budget": 5000,
+   "head_scale": 1.1,
+   "hair_budget": 600,
+   "animations": true,
+   "manifest": {
+    "source": "Quaternius Universal Base Characters [Standard] + Universal Animation Library 1+2 [Standard]",
+    "source_url": "https://quaternius.itch.io/universal-base-characters ; https://quaternius.itch.io/universal-animation-library ; https://quaternius.itch.io/universal-animation-library-2",
+    "license": "CC0 1.0",
+    "author": "Quaternius",
+    "optimization": "fingers merged (65->23 bones); decimated; palette regions from bone weights; head x1.1; AO->COLOR_0"
+   }
+  },
+  {
+   "id": "crew_theo",
+   "category": "characters",
+   "batch": "B",
+   "custom": "characters.build",
+   "purpose": "Crew: Theo (red beanie)",
+   "look": {
+    "base": "male",
+    "skin": "skin1",
+    "hair": "hair_blonde",
+    "hair_meshes": [
+     "Hair_Beard"
+    ],
+    "top": "uniform_navy",
+    "bottom": "uniform_navy",
+    "shoes": "tyre",
+    "hivis": true,
+    "headwear": "beanie"
+   },
+   "height": 1.75,
+   "budget": 5000,
+   "head_scale": 1.1,
+   "hair_budget": 400,
+   "animations": true,
+   "manifest": {
+    "source": "Quaternius Universal Base Characters [Standard] + Universal Animation Library 1+2 [Standard]",
+    "source_url": "https://quaternius.itch.io/universal-base-characters ; https://quaternius.itch.io/universal-animation-library ; https://quaternius.itch.io/universal-animation-library-2",
+    "license": "CC0 1.0",
+    "author": "Quaternius",
+    "optimization": "fingers merged (65->23 bones); decimated; palette regions from bone weights; head x1.1; AO->COLOR_0"
+   }
+  },
+  {
+   "id": "crew_maren",
+   "category": "characters",
+   "batch": "B",
+   "custom": "characters.build",
+   "purpose": "Crew: Maren (white helmet)",
+   "look": {
+    "base": "female",
+    "skin": "skin1",
+    "hair": "hair_blonde",
+    "hair_meshes": [
+     "Hair_Long"
+    ],
+    "top": "uniform_navy",
+    "bottom": "uniform_navy",
+    "shoes": "tyre",
+    "hivis": true,
+    "headwear": "helmet"
+   },
+   "height": 1.72,
+   "budget": 5000,
+   "head_scale": 1.1,
+   "hair_budget": 600,
+   "animations": true,
+   "manifest": {
+    "source": "Quaternius Universal Base Characters [Standard] + Universal Animation Library 1+2 [Standard]",
+    "source_url": "https://quaternius.itch.io/universal-base-characters ; https://quaternius.itch.io/universal-animation-library ; https://quaternius.itch.io/universal-animation-library-2",
+    "license": "CC0 1.0",
+    "author": "Quaternius",
+    "optimization": "fingers merged (65->23 bones); decimated; palette regions from bone weights; head x1.1; AO->COLOR_0"
+   }
+  },
+  {
+   "id": "crew_priya",
+   "category": "characters",
+   "batch": "B",
+   "custom": "characters.build",
+   "purpose": "Crew: Priya (amber overalls)",
+   "look": {
+    "base": "female",
+    "skin": "skin3",
+    "hair": "hair_dark",
+    "hair_meshes": [
+     "Hair_Buns"
+    ],
+    "top": "amber",
+    "sleeves": "uniform_navy",
+    "bottom": "amber",
+    "shoes": "tyre",
+    "hivis": true
+   },
+   "height": 1.68,
+   "budget": 5000,
+   "head_scale": 1.1,
+   "hair_budget": 600,
+   "animations": true,
+   "manifest": {
+    "source": "Quaternius Universal Base Characters [Standard] + Universal Animation Library 1+2 [Standard]",
+    "source_url": "https://quaternius.itch.io/universal-base-characters ; https://quaternius.itch.io/universal-animation-library ; https://quaternius.itch.io/universal-animation-library-2",
+    "license": "CC0 1.0",
+    "author": "Quaternius",
+    "optimization": "fingers merged (65->23 bones); decimated; palette regions from bone weights; head x1.1; AO->COLOR_0"
+   }
+  },
+  {
+   "id": "resident_rosa",
+   "category": "characters",
+   "batch": "B",
+   "custom": "characters.build",
+   "purpose": "Resident: Rosa, older woman (cardigan, grey bun)",
+   "look": {
+    "base": "female",
+    "skin": "skin1",
+    "hair": "hair_grey",
+    "hair_meshes": [
+     "Hair_Buns"
+    ],
+    "top": "cardigan_green",
+    "bottom": "plum",
+    "shoes": "dark_wood"
+   },
+   "height": 1.62,
+   "budget": 3000,
+   "head_scale": 1.12,
+   "hair_budget": 450,
+   "animations": true,
+   "manifest": {
+    "source": "Quaternius Universal Base Characters [Standard] + Universal Animation Library 1+2 [Standard]",
+    "source_url": "https://quaternius.itch.io/universal-base-characters ; https://quaternius.itch.io/universal-animation-library ; https://quaternius.itch.io/universal-animation-library-2",
+    "license": "CC0 1.0",
+    "author": "Quaternius",
+    "optimization": "fingers merged (65->23 bones); decimated; palette regions from bone weights; head x1.1; AO->COLOR_0"
+   }
+  },
+  {
+   "id": "resident_tomas",
+   "category": "characters",
+   "batch": "B",
+   "custom": "characters.build",
+   "purpose": "Resident: Tomas, 9-year-old boy",
+   "look": {
+    "base": "male",
+    "skin": "skin3",
+    "hair": "hair_brown",
+    "hair_meshes": [
+     "Hair_Buzzed"
+    ],
+    "top": "knit_red",
+    "bottom": "denim",
+    "shoes": "tyre",
+    "short_sleeves": false
+   },
+   "height": 1.25,
+   "budget": 3000,
+   "head_scale": 1.32,
+   "hair_budget": 450,
+   "animations": true,
+   "manifest": {
+    "source": "Quaternius Universal Base Characters [Standard] + Universal Animation Library 1+2 [Standard]",
+    "source_url": "https://quaternius.itch.io/universal-base-characters ; https://quaternius.itch.io/universal-animation-library ; https://quaternius.itch.io/universal-animation-library-2",
+    "license": "CC0 1.0",
+    "author": "Quaternius",
+    "optimization": "fingers merged (65->23 bones); decimated; palette regions from bone weights; head x1.1; AO->COLOR_0"
+   }
+  },
+  {
+   "id": "resident_arthur",
+   "category": "characters",
+   "batch": "B",
+   "custom": "characters.build",
+   "purpose": "Resident: Arthur, retired man (grey hair + beard)",
+   "look": {
+    "base": "male",
+    "skin": "skin2",
+    "hair": "hair_grey",
+    "hair_meshes": [
+     "Hair_SimpleParted",
+     "Hair_Beard"
+    ],
+    "top": "mustard",
+    "bottom": "slate",
+    "shoes": "dark_wood"
+   },
+   "height": 1.74,
+   "budget": 3000,
+   "head_scale": 1.1,
+   "hair_budget": 450,
+   "animations": true,
+   "manifest": {
+    "source": "Quaternius Universal Base Characters [Standard] + Universal Animation Library 1+2 [Standard]",
+    "source_url": "https://quaternius.itch.io/universal-base-characters ; https://quaternius.itch.io/universal-animation-library ; https://quaternius.itch.io/universal-animation-library-2",
+    "license": "CC0 1.0",
+    "author": "Quaternius",
+    "optimization": "fingers merged (65->23 bones); decimated; palette regions from bone weights; head x1.1; AO->COLOR_0"
+   }
+  }
+ ]
+}

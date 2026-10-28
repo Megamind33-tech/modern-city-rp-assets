@@ -82,7 +82,13 @@ func _station() -> void:
 	add_child(root)
 	# Apron
 	Build.box(root, Vector3(24, 0.06, 10), Vector3(0, 0.03, -7.5), Build.C_PAVE)
-	# Main hall with two bays
+	if AssetLib.spawn("station_hall", root, Vector3(0, 0, -17.5), PI) != null:
+		AssetLib.add_box_collider("station_hall", root, Vector3(0, 0, -17.5), PI)
+		var sign_a := Build.label(root, "KETTLEFORD EMERGENCY STATION", Vector3(0, 7.6, -11.8), 64, Build.C_CREAM)
+		sign_a.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+		_station_props(root)
+		return
+	# Main hall with two bays (primitive fallback)
 	Build.box(root, Vector3(22, 7, 10), Vector3(0, 3.5, -17.5), Build.C_BRICK, true)
 	Build.box(root, Vector3(22.6, 0.6, 10.6), Vector3(0, 7.3, -17.5), Build.C_NAVY)
 	for bx in [-5.0, 5.0]:
@@ -95,6 +101,10 @@ func _station() -> void:
 	Build.sphere(root, 0.35, Vector3(-13, 9.5, -16.9), Build.C_AMBER).material_override = Build.mat(Build.C_AMBER, true)
 	var sign := Build.label(root, "KETTLEFORD EMERGENCY STATION", Vector3(0, 6.2, -12.3), 72, Build.C_CREAM)
 	sign.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	_station_props(root)
+
+
+func _station_props(root: Node3D) -> void:
 	# Bins, bench, flower tubs: small life signals.
 	Build.box(root, Vector3(1.8, 0.5, 0.6), Vector3(9, 0.25, -11.5), Build.C_WOOD, true)
 	for fx in [-10.5, 10.5]:
@@ -102,34 +112,46 @@ func _station() -> void:
 		Build.sphere(root, 0.55, Vector3(fx, 0.85, -11.8), Color(0.85, 0.4, 0.55), 8)
 
 
-func _house(parent: Node3D, pos: Vector3, facing_x: float, wall: Color, house_id: String = "") -> void:
+## Houses face their street: yaw rotates the authored front (−Z) toward the road.
+func _house(parent: Node3D, pos: Vector3, yaw: float, wall: Color, house_id: String = "", variant: int = 0) -> void:
 	var h := Node3D.new()
 	h.position = pos
+	h.rotation.y = yaw
 	parent.add_child(h)
-	Build.box(h, Vector3(7, 4, 8), Vector3(0, 2, 0), wall, true)
-	var roof := Build.prism(h, Vector3(7.6, 2.4, 8.4), Vector3(0, 5.2, 0), Color(0.36, 0.30, 0.30))
-	roof.rotation.y = PI / 2
-	Build.box(h, Vector3(0.1, 2.0, 1.1), Vector3(facing_x * 3.52, 1.0, 0), Build.C_NAVY)
-	for wz in [-2.4, 2.4]:
-		Build.box(h, Vector3(0.1, 1.1, 1.4), Vector3(facing_x * 3.52, 2.4, wz), Build.C_GLASS)
+	var asset_id := "house_%s" % "abcd"[variant % 4]
+	if AssetLib.spawn(asset_id, h) != null:
+		AssetLib.add_box_collider(asset_id, h, Vector3.ZERO)
+	else:
+		Build.box(h, Vector3(7, 4, 8), Vector3(0, 2, 0), wall, true)
+		var roof := Build.prism(h, Vector3(8.4, 2.4, 7.6), Vector3(0, 5.2, 0), Color(0.36, 0.30, 0.30))
+		roof.rotation.y = PI / 2
+		Build.box(h, Vector3(1.1, 2.0, 0.1), Vector3(0, 1.0, -4.02), Build.C_NAVY)
+		for wx in [-2.4, 2.4]:
+			Build.box(h, Vector3(1.4, 1.1, 0.1), Vector3(wx, 2.4, -4.02), Build.C_GLASS)
 	if house_id != "":
 		var state := Node3D.new()
 		state.name = "RoofState"
 		h.add_child(state)
 		_house_roofs[house_id] = state
-		Build.label(h, house_id.trim_prefix("house_").capitalize(), Vector3(facing_x * 4.2, 3.4, 0), 40)
+		Build.label(h, house_id.trim_prefix("house_").capitalize(), Vector3(0, 2.8, -5.4), 40)
 
 
 func _apply_roof(house_id: String) -> void:
 	var state: Node3D = _house_roofs[house_id]
 	for c in state.get_children():
 		c.queue_free()
-	match world.get_value("%s.roof" % house_id, "intact"):
+	var roof_state: String = world.get_value("%s.roof" % house_id, "intact")
+	# Overlays are authored in house-local space on the front (−Z) roof slope.
+	if roof_state == "damaged" and AssetLib.spawn("roof_damage", state) != null:
+		return
+	if roof_state == "repaired" and AssetLib.spawn("roof_patch", state) != null:
+		return
+	match roof_state:
 		"damaged":
 			# Blue tarp and a fallen limb: the damage stays until the station pays to repair it.
-			# Roof slopes face +/-Z at ROOF_PITCH; the tarp lies on the +Z (street-corner) slope.
-			var tarp := Build.box(state, Vector3(6.0, 0.1, 3.2), Vector3(0, 5.5, 1.7), Build.C_TARP)
-			tarp.rotation.x = ROOF_PITCH
+			# Primitive fallback: tarp on the front (−Z) slope at ROOF_PITCH.
+			var tarp := Build.box(state, Vector3(6.0, 0.1, 3.2), Vector3(0, 5.5, -1.7), Build.C_TARP)
+			tarp.rotation.x = -ROOF_PITCH
 			var limb := Build.cyl(state, 0.3, 7.0, Vector3(-1.0, 6.0, 1.2), Build.C_BARK)
 			limb.rotation = Vector3(0.3, 0.4, 1.25)
 			Build.sphere(state, 1.5, Vector3(-3.6, 5.6, 2.2), Build.C_LEAF, 8)
@@ -139,8 +161,8 @@ func _apply_roof(house_id: String) -> void:
 				d.rotation.y = k * 0.7
 		"repaired":
 			# New tiles read slightly brighter than the old roof.
-			var patch := Build.box(state, Vector3(4.0, 0.08, 2.6), Vector3(0, 5.5, 1.7), Color(0.62, 0.38, 0.32))
-			patch.rotation.x = ROOF_PITCH
+			var patch := Build.box(state, Vector3(4.0, 0.08, 2.6), Vector3(0, 5.5, -1.7), Color(0.62, 0.38, 0.32))
+			patch.rotation.x = -ROOF_PITCH
 
 
 func _lane_houses(loc_id: String, x: float, anchor_z: float, house_id: String) -> void:
@@ -151,16 +173,17 @@ func _lane_houses(loc_id: String, x: float, anchor_z: float, house_id: String) -
 			var pos := Vector3(x + side * 12.0, 0, float(z))
 			if side == 1 and absf(z - anchor_z) < 8:
 				continue  # the incident house is placed explicitly below
-			_house(self, pos, -side, palette[i % palette.size()])
+			_house(self, pos, side * PI / 2, palette[i % palette.size()], "", i + int(x))
 			i += 1
 	# Incident house sits on the +x side, its garden oak is what falls.
-	_house(self, Vector3(x + 12.0, 0, anchor_z + 3.0), -1, Color(0.97, 0.80, 0.55), house_id)
+	_house(self, Vector3(x + 12.5, 0, anchor_z + 3.0), PI / 2, Color(0.97, 0.80, 0.55), house_id, 0 if loc_id == "alder_lane" else 2)
 	var pile := Node3D.new()
 	pile.name = "LogPile_" + loc_id
 	add_child(pile)
-	for k in 4:
-		var lg := Build.cyl(pile, 0.32, 1.9, Vector3(x - 7.2, 0.35 + (k / 2) * 0.6, anchor_z - 4.0 + (k % 2) * 0.7), Build.C_WOOD)
-		lg.rotation.z = PI / 2
+	if AssetLib.spawn("log_pile", pile, Vector3(x - 7.2, 0, anchor_z - 4.0), PI / 2) == null:
+		for k in 4:
+			var lg := Build.cyl(pile, 0.32, 1.9, Vector3(x - 7.2, 0.35 + (k / 2) * 0.6, anchor_z - 4.0 + (k % 2) * 0.7), Build.C_WOOD)
+			lg.rotation.z = PI / 2
 	_log_piles[loc_id] = pile
 	var barrier := Node3D.new()
 	barrier.name = "Barrier_" + loc_id
@@ -185,7 +208,7 @@ func _filler() -> void:
 			continue  # station frontage
 		if absf(x - 60) < 7 or absf(x - 120) < 7:
 			continue  # lane junctions
-		_tree(Vector3(x, 0, z), rng.randf_range(0.8, 1.2))
+		_tree(Vector3(x, 0, z), rng.randf_range(0.8, 1.2), "tree_street")
 	var locs := DataDB.locations()
 	for id in locs:
 		if not locs[id].has("house"):
@@ -195,15 +218,18 @@ func _filler() -> void:
 		for z in range(20, 72, 9):
 			if absf(z - anchor_z) < 10:
 				continue  # keep the incident verge clear for the log pile
-			_tree(Vector3(lane_x - 7.0, 0, float(z) + rng.randf_range(-2, 2)), rng.randf_range(0.7, 1.0))
+			_tree(Vector3(lane_x - 7.0, 0, float(z) + rng.randf_range(-2, 2)), rng.randf_range(0.7, 1.0), "tree_oak_a" if z % 2 == 0 else "tree_oak_b")
 	# Houses along the north side of the main street.
 	var cols := [Color(0.92, 0.84, 0.74), Color(0.78, 0.84, 0.90), Color(0.90, 0.76, 0.70)]
 	var k := 0
 	for x in [30.0, 85.0, 100.0, 140.0]:
-		_house(self, Vector3(x, 0, 14), 1, cols[k % 3])
+		_house(self, Vector3(x, 0, 14), 0.0, cols[k % 3], "", k + 1)
 		k += 1
 
 
-func _tree(pos: Vector3, s: float) -> void:
+func _tree(pos: Vector3, s: float, asset_id: String = "tree_street") -> void:
+	if AssetLib.spawn(asset_id, self, pos, fmod(pos.x * 1.7, TAU), Vector3.ONE * s) != null:
+		Build.static_box(self, Vector3(0.5, 2.0, 0.5), pos + Vector3(0, 1.0, 0))
+		return
 	Build.cyl(self, 0.22 * s, 2.4 * s, pos + Vector3(0, 1.2 * s, 0), Build.C_BARK, true, 6)
 	Build.sphere(self, 1.5 * s, pos + Vector3(0, 3.1 * s, 0), Build.C_LEAF, 8)

@@ -33,6 +33,13 @@ func _ready() -> void:
 
 
 func _build_visual() -> void:
+	var art := AssetLib.spawn("rescue_truck", self)
+	if art != null:
+		for n in ["LightL", "LightR"]:
+			var l := art.find_child(n, true, false) as MeshInstance3D
+			if l:
+				_lights.append(l)
+		return
 	var v := Node3D.new()
 	add_child(v)
 	# Chassis, cab (front is -Z), equipment body with roller shutters.

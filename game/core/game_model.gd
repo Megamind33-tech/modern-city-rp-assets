@@ -136,6 +136,7 @@ func resolve(outcome: String, reason: String) -> Dictionary:
 	crew.apply_mission(inst)
 	last_result = {
 		"uid": inst["uid"],
+		"def_id": inst["def_id"],
 		"title": inst["title"],
 		"outcome": outcome,
 		"reason": reason,
@@ -147,6 +148,19 @@ func resolve(outcome: String, reason: String) -> Dictionary:
 	_fire("resolved")
 	incident_resolved.emit(last_result)
 	return last_result
+
+
+## Player-facing consequence line for a resolved incident (authored in incidents.json).
+func outcome_text(result: Dictionary) -> String:
+	var def: Dictionary = incidents.defs.get(result.get("def_id", ""), {})
+	var texts: Dictionary = def.get("outcome_text", {})
+	var key := "success" if result["outcome"] == "success" else String(result.get("reason", "timeout"))
+	var loc: Dictionary = DataDB.locations().get(result.get("location", ""), {})
+	var ctx := {"location_name": loc.get("name", ""), "resident_name": DataDB.display_name(String(loc.get("resident", "")))}
+	var text := String(texts.get(key, texts.get("timeout", ""))).format(ctx)
+	if result["outcome"] == "success" and result.get("flags", {}).get("unsafe_cut", false):
+		text += " Maren hasn't forgotten the cones."
+	return text
 
 
 func return_to_station() -> bool:

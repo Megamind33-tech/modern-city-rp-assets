@@ -45,6 +45,7 @@ var menu_panel: PanelContainer
 var pause_panel: PanelContainer
 var dispatch_banner: Button
 
+var _meter_label: Label
 var _dialogue_speaker: Label
 var _dialogue_text: Label
 var _toast_t := 0.0
@@ -227,8 +228,8 @@ func _build_hud() -> void:
 	bg.set_corner_radius_all(8)
 	bind_bar.add_theme_stylebox_override("background", bg)
 	root.add_child(bind_bar)
-	var bind_lbl := _label(bind_bar, "CHAIN BIND", 16)
-	bind_lbl.position = Vector2(8, 2)
+	_meter_label = _label(bind_bar, "", 16)
+	_meter_label.position = Vector2(8, 2)
 	# Crew order
 	crew_button = _button(root, "Theo: cone off", func() -> void: crew_order.emit())
 	crew_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -339,11 +340,13 @@ func set_action(text: String, enabled: bool, prompt: String = "") -> void:
 	prompt_label.text = prompt
 
 
-func set_bind(level: float) -> void:
+## Context meter (chain bind, pull-start gauge, pumping). Default colour ramps amber→red.
+func set_bind(level: float, caption: String = "", color: Variant = null) -> void:
+	_meter_label.text = caption
 	bind_bar.visible = level >= 0.0
 	if level >= 0.0:
 		bind_bar.value = level
-		(bind_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = AMBER.lerp(RED, level)
+		(bind_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = color if color is Color else AMBER.lerp(RED, level)
 
 
 func show_toast(text: String, seconds: float = 2.5) -> void:

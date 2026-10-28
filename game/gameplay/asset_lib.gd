@@ -1,18 +1,15 @@
 class_name AssetLib
 extends RefCounted
 ## Loads production art by logical id (game/assets/asset_index.json, written by the
-## Blender pipeline). Every mesh gets one shared palette material so the whole town
-## renders from a single texture. Callers fall back to primitives when an id is absent,
-## so gameplay and tests never depend on art being present.
+## Blender pipeline). The glb import settings already map every surface onto the shared
+## res://assets/materials/palette*.tres materials. Callers fall back to primitives when
+## an id is absent, so gameplay and tests never depend on art being present.
 
 const INDEX_PATH := "res://assets/asset_index.json"
-const PALETTE_PATH := "res://assets/palette.png"
 
 static var _index: Dictionary = {}
 static var _loaded := false
 static var _scenes: Dictionary = {}
-static var _palette_mat: StandardMaterial3D
-static var _emissive_mat: StandardMaterial3D
 static var disabled := false  # set by --no-art for A/B performance comparisons
 
 
@@ -40,25 +37,6 @@ static func info(id: String) -> Dictionary:
 	return _index.get(id, {})
 
 
-static func palette_material() -> StandardMaterial3D:
-	if _palette_mat == null:
-		_palette_mat = StandardMaterial3D.new()
-		_palette_mat.roughness = 0.85
-		_palette_mat.vertex_color_use_as_albedo = true
-		if ResourceLoader.exists(PALETTE_PATH):
-			_palette_mat.albedo_texture = load(PALETTE_PATH)
-	return _palette_mat
-
-
-static func emissive_material() -> StandardMaterial3D:
-	if _emissive_mat == null:
-		_emissive_mat = palette_material().duplicate()
-		_emissive_mat.emission_enabled = true
-		_emissive_mat.emission_texture = _emissive_mat.albedo_texture
-		_emissive_mat.emission_energy_multiplier = 1.6
-	return _emissive_mat
-
-
 ## Instances the asset under parent, or returns null if it isn't available.
 static func spawn(id: String, parent: Node, pos: Vector3 = Vector3.ZERO, yaw: float = 0.0, scale: Vector3 = Vector3.ONE) -> Node3D:
 	if not has(id):
@@ -73,23 +51,8 @@ static func spawn(id: String, parent: Node, pos: Vector3 = Vector3.ZERO, yaw: fl
 	node.position = pos
 	node.rotation.y = yaw
 	node.scale = scale
-	_apply_materials(node)
 	parent.add_child(node)
 	return node
-
-
-static func _apply_materials(n: Node) -> void:
-	if n is MeshInstance3D:
-		var mi := n as MeshInstance3D
-		var emissive := false
-		if mi.mesh:
-			for s in mi.mesh.get_surface_count():
-				var m := mi.mesh.surface_get_material(s)
-				if m and m.resource_name.contains("emissive"):
-					emissive = true
-		mi.material_override = emissive_material() if emissive else palette_material()
-	for c in n.get_children():
-		_apply_materials(c)
 
 
 ## Adds a box collider matching the asset's declared footprint (size_m in the index).

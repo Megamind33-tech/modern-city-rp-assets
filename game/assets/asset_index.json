@@ -1,0 +1,270 @@
+{
+ "assets": {
+  "station_hall": {
+   "path": "res://assets/env/station_hall.glb",
+   "category": "env",
+   "tris": 5327,
+   "size_m": [
+    22.285,
+    11.02,
+    11.04
+   ],
+   "nodes": [
+    "BayDoor1",
+    "BayDoor2",
+    "Body"
+   ],
+   "animations": []
+  },
+  "house_a": {
+   "path": "res://assets/env/house_a.glb",
+   "category": "env",
+   "tris": 2642,
+   "size_m": [
+    7.54,
+    10.096,
+    8.98
+   ],
+   "nodes": [
+    "Body",
+    "Roof"
+   ],
+   "animations": []
+  },
+  "house_b": {
+   "path": "res://assets/env/house_b.glb",
+   "category": "env",
+   "tris": 2106,
+   "size_m": [
+    7.54,
+    10.096,
+    9.53
+   ],
+   "nodes": [
+    "Body",
+    "Roof"
+   ],
+   "animations": []
+  },
+  "house_c": {
+   "path": "res://assets/env/house_c.glb",
+   "category": "env",
+   "tris": 2106,
+   "size_m": [
+    7.54,
+    10.096,
+    9.27
+   ],
+   "nodes": [
+    "Body",
+    "Roof"
+   ],
+   "animations": []
+  },
+  "house_d": {
+   "path": "res://assets/env/house_d.glb",
+   "category": "env",
+   "tris": 2194,
+   "size_m": [
+    7.54,
+    10.096,
+    9.53
+   ],
+   "nodes": [
+    "Body",
+    "Roof"
+   ],
+   "animations": []
+  },
+  "roof_damage": {
+   "path": "res://assets/env/roof_damage.glb",
+   "category": "env",
+   "tris": 1178,
+   "size_m": [
+    6.852,
+    3.545,
+    4.226
+   ],
+   "nodes": [
+    "Limb",
+    "Tarp"
+   ],
+   "animations": []
+  },
+  "roof_patch": {
+   "path": "res://assets/env/roof_patch.glb",
+   "category": "env",
+   "tris": 352,
+   "size_m": [
+    3.22,
+    1.959,
+    2.714
+   ],
+   "nodes": [
+    "Patch"
+   ],
+   "animations": []
+  },
+  "tree_oak_a": {
+   "path": "res://assets/env/tree_oak_a.glb",
+   "category": "env",
+   "tris": 651,
+   "size_m": [
+    6.228,
+    7.646,
+    6.37
+   ],
+   "nodes": [
+    "Tree"
+   ],
+   "animations": []
+  },
+  "tree_oak_b": {
+   "path": "res://assets/env/tree_oak_b.glb",
+   "category": "env",
+   "tris": 731,
+   "size_m": [
+    6.661,
+    6.756,
+    7.152
+   ],
+   "nodes": [
+    "Tree"
+   ],
+   "animations": []
+  },
+  "tree_street": {
+   "path": "res://assets/env/tree_street.glb",
+   "category": "env",
+   "tris": 332,
+   "size_m": [
+    2.737,
+    6.059,
+    2.552
+   ],
+   "nodes": [
+    "Tree"
+   ],
+   "animations": []
+  },
+  "bush_a": {
+   "path": "res://assets/env/bush_a.glb",
+   "category": "env",
+   "tris": 340,
+   "size_m": [
+    2.055,
+    1.046,
+    1.32
+   ],
+   "nodes": [
+    "Bush"
+   ],
+   "animations": []
+  },
+  "traffic_cone": {
+   "path": "res://assets/props/traffic_cone.glb",
+   "category": "props",
+   "tris": 104,
+   "size_m": [
+    0.42,
+    0.7,
+    0.42
+   ],
+   "nodes": [
+    "Cone"
+   ],
+   "animations": []
+  },
+  "chainsaw": {
+   "path": "res://assets/props/chainsaw.glb",
+   "category": "props",
+   "tris": 600,
+   "size_m": [
+    0.26,
+    0.34,
+    0.827
+   ],
+   "nodes": [
+    "Chainsaw"
+   ],
+   "animations": []
+  },
+  "log_section": {
+   "path": "res://assets/props/log_section.glb",
+   "category": "props",
+   "tris": 188,
+   "size_m": [
+    1.0,
+    0.72,
+    0.72
+   ],
+   "nodes": [
+    "Log"
+   ],
+   "animations": []
+  },
+  "root_plate": {
+   "path": "res://assets/props/root_plate.glb",
+   "category": "props",
+   "tris": 280,
+   "size_m": [
+    2.531,
+    2.415,
+    2.454
+   ],
+   "nodes": [
+    "RootPlate"
+   ],
+   "animations": []
+  },
+  "canopy_cluster": {
+   "path": "res://assets/props/canopy_cluster.glb",
+   "category": "props",
+   "tris": 600,
+   "size_m": [
+    4.729,
+    2.319,
+    3.101
+   ],
+   "nodes": [
+    "Canopy"
+   ],
+   "animations": []
+  },
+  "log_pile": {
+   "path": "res://assets/props/log_pile.glb",
+   "category": "props",
+   "tris": 560,
+   "size_m": [
+    1.684,
+    1.111,
+    1.822
+   ],
+   "nodes": [
+    "Logs"
+   ],
+   "animations": []
+  },
+  "rescue_truck": {
+   "path": "res://assets/vehicles/rescue_truck.glb",
+   "category": "vehicles",
+   "tris": 3968,
+   "size_m": [
+    2.68,
+    2.808,
+    6.53
+   ],
+   "nodes": [
+    "Body",
+    "LightL",
+    "LightR"
+   ],
+   "animations": []
+  }
+ },
+ "notes": {
+  "orientation": "front faces -Z, +Y up, metres, pivot at base centre (y=0 ground)",
+  "materials": "surface 'palette' (albedo res://assets/palette.png x COLOR_0 baked AO); 'palette_emissive' on light nodes",
+  "overlays": "roof_damage / roof_patch are authored in house_* local space: give them the same transform as the house"
+ }
+}

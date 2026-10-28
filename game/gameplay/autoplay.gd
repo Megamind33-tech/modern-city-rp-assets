@@ -98,6 +98,34 @@ func drain_dialogue() -> void:
 ## Walks straight at the target; when blocked (e.g. by the truck body) it sidesteps
 ## perpendicular for a moment, alternating sides, like a player steering around.
 func walk_to(p: Vector3, within: float = 0.5, timeout: float = 25.0) -> bool:
+	# Route around the parked truck via its nearest corner, as a player would.
+	var tr: Truck = main.truck
+	var from: Vector3 = main.player.global_position
+	if not tr.driving and _crosses_truck(from, p):
+		var best := Vector3.ZERO
+		var best_len := INF
+		for cx in [-2.2, 2.2]:
+			for cz in [-4.2, 4.2]:
+				var c: Vector3 = tr.global_transform * Vector3(cx, 0, cz)
+				var l := from.distance_to(c) + c.distance_to(p)
+				if l < best_len and not _crosses_truck(from, c):
+					best = c
+					best_len = l
+		if best_len < INF:
+			await _walk_direct(best, 0.6, timeout)
+	return await _walk_direct(p, within, timeout)
+
+
+func _crosses_truck(a: Vector3, b: Vector3) -> bool:
+	var inv: Transform3D = main.truck.global_transform.affine_inverse()
+	for k in 21:
+		var q: Vector3 = inv * a.lerp(b, k / 20.0)
+		if absf(q.x) < 1.7 and absf(q.z) < 3.6:
+			return true
+	return false
+
+
+func _walk_direct(p: Vector3, within: float, timeout: float) -> bool:
 	var t := 0.0
 	var last: Vector3 = main.player.global_position
 	var stuck := 0.0
@@ -164,6 +192,17 @@ func drive_route(points: Array, stop_when: Callable, timeout: float = 120.0) -> 
 				return false
 	main.bot_input = Vector2.ZERO
 	return await _until(stop_when, 8.0, "arrival after route")
+
+
+func _hold_until(cond: Callable, timeout: float) -> void:
+	main.player.rescan()
+	main._action_down()
+	var t := 0.0
+	while not cond.call() and t < timeout:
+		await get_tree().physics_frame
+		t += 1.0 / Engine.physics_ticks_per_second
+	main._action_up()
+	await _wait(0.1)
 
 
 func truck_point(which: String) -> Vector3:
@@ -300,17 +339,73 @@ func _run() -> void:
 	m = _model()
 	expect(SaveSystem.canonical(m.to_dict()) == before, "reloaded state identical")
 
-	# --- Second call: abandon -> persistent damage ---
-	await _until(func() -> bool: return main.hud.dispatch_panel.visible, 20.0, "second call")
+	# --- Day 2: story incident — flooded Mendes cellar (second hands-on family) ---
+	await _until(func() -> bool: return main.hud.dispatch_panel.visible, 20.0, "day-2 call")
+	var flood: Dictionary = m.incidents.active
+	expect(flood["def_id"] == "flooded_cellar", "day-2 call is the Mendes cellar flood")
+	expect(flood["flags"].get("tomas_helps", false) == m.flags.get("helped_rosa_mendes", false), "Tomás helps only if Rosa was helped")
+	main.hud.dispatch_panel.visible = false
+	main._on_dispatch("quick")
+	await drain_dialogue()
+	await shot("14_flood_arrival")
+	var fs: FloodedCellarSite = main.site
+	main._on_crew_order()
+	await walk_to(truck_point("radio"), 0.5)
+	await press()
+	await walk_to(fs.to_global(Vector3(2.8, 0, -11.2)), 0.4)
+	await press()
+	expect(main.player.carrying == fs.pump, "lifted the pump")
+	await walk_to(fs.to_global(FloodedCellarSite.PUMP_SPOT), 0.5)
+	await press()
+	expect(m.incidents.is_task_done("place_pump"), "pump placed at the cellar steps")
+	for i in fs.hose_points.size():
+		await walk_to(fs.to_global(fs.hose_points[i]), 0.35)
+		await _hold_until(func() -> bool: return int(m.incidents.find_task("lay_hose")["progress"]) > i, 4.0)
+	expect(m.incidents.is_task_done("lay_hose"), "hose coupled to the drain")
+	for j in fs.debris.size():
+		await walk_to(fs.debris[j].global_position + Vector3(-0.8, 0, 0), 0.35)
+		await _hold_until(func() -> bool: return m.incidents.find_task("clear_drain")["done_indices"].has(j), 4.0)
+	expect(m.incidents.is_task_done("clear_drain"), "drain cleared")
+	await _until(func() -> bool: return m.incidents.is_task_done("isolate_power"), 15.0, "house supply cut")
+	await walk_to(fs.to_global(FloodedCellarSite.PUMP_SPOT + Vector3(-1.0, 0, 0)), 0.4)
+	var misses := 0
+	var t2 := 0.0
+	while not m.incidents.is_task_done("prime_pump") and t2 < 30.0:
+		if fs.gauge > 0.76 and fs.gauge < 0.9 and fs._cooldown <= 0.0:
+			await press()
+		elif misses == 0:
+			await press()  # one deliberate early pull to exercise the miss path
+			misses += 1
+		await get_tree().physics_frame
+		t2 += 1.0 / Engine.physics_ticks_per_second
+	expect(m.incidents.is_task_done("prime_pump"), "pump primed by rhythm pulls (%d deliberate miss)" % misses)
+	await _wait(3.0)
+	await shot("15_pumping")
+	await _until(func() -> bool: return m.incidents.is_task_done("pump_out"), 90.0, "cellar pumped dry")
+	await walk_to(fs.to_global(FloodedCellarSite.HATCH + Vector3(-1.2, 0, 0)), 0.4)
+	await _hold_until(func() -> bool: return main.hud.result_panel.visible, 4.0)
+	expect(m.last_result.get("outcome", "") == "success", "flood resolved as success")
+	expect(m.world.get_value("house_mendes.cellar") == "dry", "cellar state persisted")
+	await shot("16_flood_result")
+	main.hud.result_panel.visible = false
+	main._on_return("quick")
+	await drain_dialogue()
+	expect(m.story.fired.has("cellar_saved"), "Rosa reacts to the saved cellar")
+	main.hud.end_shift_pressed.emit()
+	await drain_dialogue()
+	expect(m.day == 3, "day 3")
+
+	# --- Day 3: routine call, abandoned -> persistent damage ---
+	await _until(func() -> bool: return main.hud.dispatch_panel.visible, 20.0, "day-3 call")
 	var inst2: Dictionary = m.incidents.active
-	expect(inst2["location"] != inst["location"], "second call on a different street (%s)" % inst2["location"])
+	expect(inst2["def_id"] == "fallen_tree" and inst2["location"] != "alder_lane", "routine tree call on another street (%s)" % inst2["location"])
 	main.hud.dispatch_panel.visible = false
 	main._on_dispatch("quick")
 	await drain_dialogue()
 	main._on_pause_choice("abandon")
 	await _until(func() -> bool: return main.hud.result_panel.visible, 5.0, "failure result")
 	expect(m.last_result.get("outcome", "") == "failure", "abandon handled as failure")
-	await shot("12_failure")
+	await shot("17_failure")
 	main.hud.result_panel.visible = false
 	main._on_return("quick")
 	var house: String = inst2["context"]["house"]
@@ -318,12 +413,14 @@ func _run() -> void:
 	expect(m.available_projects().any(func(p: Dictionary) -> bool: return p["id"] == "repair_roof_%s" % house), "repair project unlocked")
 	var look := Node3D.new()
 	main.add_child(look)
-	look.global_position = main._site_anchor(inst2) + Vector3(6, 0, 0)
+	look.global_position = main._site_anchor(inst2) + Vector3(10, 0, 3)
 	main.rig.target = look
+	main.rig.mode = "tactical"
 	main.rig.walk_yaw = -PI / 2
 	main.rig.snap()
 	await _wait(0.5)
-	await shot("13_roof_damage_persists")
+	await shot("18_roof_damage_persists")
+	main.rig.mode = "walk"
 	main.rig.target = main.player
 	await drain_dialogue()
 	Game.save_game()

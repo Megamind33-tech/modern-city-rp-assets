@@ -1,5 +1,5 @@
 class_name FallenTreeSite
-extends Node3D
+extends IncidentSite
 ## Debris-removal incident site: a storm-felled oak across a residential lane.
 ## Owns the visuals and the hands-on interactions; every rule decision is delegated to
 ## GameModel.progress_task so the scene can never disagree with the saved simulation.
@@ -7,17 +7,11 @@ extends Node3D
 ## Chainsaw feel: holding the action cuts, but the chain "binds" if you lean on it.
 ## Let off before the bind meter fills or the saw stalls for a moment.
 
-signal message(text: String)
-signal resolved(result: Dictionary)
-
 const ROAD_HALF := 4.0
 const STALL_TIME := 1.2
 const BASE_CUT_RATE := 0.42
 const BASE_BIND_RATE := 0.55
 
-var model: GameModel
-var player: Player
-var anchor := Vector3.ZERO
 var n := 0
 var cut_progress: Array = []
 var bind := 0.0
@@ -25,8 +19,6 @@ var stall_t := 0.0
 var cutting := -1
 var segments: Array = []
 var cut_marks: Array = []
-var cones: Array = []
-var cone_points: Array = []
 var pile_count := 0
 
 var _zone: Node3D
@@ -38,51 +30,40 @@ var _cut_rate := BASE_CUT_RATE
 var _bind_rate := BASE_BIND_RATE
 
 
-func setup(game_model: GameModel, p: Player, anchor_pos: Vector3) -> void:
-	model = game_model
-	player = p
-	anchor = anchor_pos
-	position = anchor
+func _prepare() -> void:
 	var level := int(model.equipment.get("chainsaw", 1))
 	_cut_rate = BASE_CUT_RATE * (1.35 if level >= 2 else 1.0)
 	_bind_rate = BASE_BIND_RATE * (0.7 if level >= 2 else 1.0)
 	n = int(model.incidents.find_task("cut_trunk")["required"])
 	for i in n:
 		cut_progress.append(0.0)
-	_build()
-	_sync_from_model()
-
-
-func inst() -> Dictionary:
-	return model.incidents.active
-
-
-func _done_indices(task: String) -> Array:
-	var t := model.incidents.find_task(task)
-	return t.get("done_indices", [])
 
 
 func _build() -> void:
 	var seg_len := ROAD_HALF * 2.0 / n
 	# Root plate on the -x verge, canopy resting in the +x garden.
-	var root := Build.cyl(self, 1.3, 0.5, Vector3(-ROAD_HALF - 1.6, 1.1, 0), Build.C_BARK, false, 10)
-	root.rotation.z = PI / 2
-	Build.sphere(self, 0.9, Vector3(-ROAD_HALF - 1.8, 0.6, 0.3), Color(0.35, 0.26, 0.18), 8)
-	var canopy := Node3D.new()
-	add_child(canopy)
-	for k in 5:
-		Build.sphere(canopy, 1.2 + 0.2 * (k % 2), Vector3(ROAD_HALF + 1.4 + k * 0.9, 0.9 + (k % 2) * 0.6, -1.2 + (k % 3) * 1.1), Build.C_LEAF, 8)
-	var stub := Build.cyl(canopy, 0.34, 2.4, Vector3(ROAD_HALF + 1.2, 0.4, 0), Build.C_BARK)
-	stub.rotation.z = PI / 2
+	if AssetLib.spawn("root_plate", self, Vector3(-ROAD_HALF - 1.6, 0, 0), PI / 2) == null:
+		var root := Build.cyl(self, 1.3, 0.5, Vector3(-ROAD_HALF - 1.6, 1.1, 0), Build.C_BARK, false, 10)
+		root.rotation.z = PI / 2
+		Build.sphere(self, 0.9, Vector3(-ROAD_HALF - 1.8, 0.6, 0.3), Color(0.35, 0.26, 0.18), 8)
+	if AssetLib.spawn("canopy_cluster", self, Vector3(ROAD_HALF + 2.6, 0, 0), -PI / 2) == null:
+		var canopy := Node3D.new()
+		add_child(canopy)
+		for k in 5:
+			Build.sphere(canopy, 1.2 + 0.2 * (k % 2), Vector3(ROAD_HALF + 1.4 + k * 0.9, 0.9 + (k % 2) * 0.6, -1.2 + (k % 3) * 1.1), Build.C_LEAF, 8)
+		var stub := Build.cyl(canopy, 0.34, 2.4, Vector3(ROAD_HALF + 1.2, 0.4, 0), Build.C_BARK)
+		stub.rotation.z = PI / 2
 	for i in n:
 		var seg := Node3D.new()
 		seg.position = Vector3(-ROAD_HALF + seg_len * (i + 0.5), 0.4, 0)
 		add_child(seg)
-		var m := Build.cyl(seg, 0.36, seg_len - 0.04, Vector3.ZERO, Build.C_BARK, false, 10)
-		m.rotation.z = PI / 2
-		for end in [-1.0, 1.0]:
-			var face := Build.cyl(seg, 0.33, 0.02, Vector3(end * (seg_len / 2 - 0.01), 0, 0), Build.C_WOOD)
-			face.rotation.z = PI / 2
+		# log_section is authored 1 m long along X with its pivot at the base centre.
+		if AssetLib.spawn("log_section", seg, Vector3(0, -0.36, 0), 0.0, Vector3(seg_len - 0.04, 1, 1)) == null:
+			var m := Build.cyl(seg, 0.36, seg_len - 0.04, Vector3.ZERO, Build.C_BARK, false, 10)
+			m.rotation.z = PI / 2
+			for end in [-1.0, 1.0]:
+				var face := Build.cyl(seg, 0.33, 0.02, Vector3(end * (seg_len / 2 - 0.01), 0, 0), Build.C_WOOD)
+				face.rotation.z = PI / 2
 		segments.append(seg)
 		var mark := Build.cyl(self, 0.42, 0.08, seg.position + Vector3(0, 0, 0), Build.C_AMBER)
 		mark.rotation.z = PI / 2
@@ -111,7 +92,6 @@ func _build() -> void:
 	_sawdust.material_override = Build.mat(Build.C_WOOD)
 	add_child(_sawdust)
 	_build_debris_zone()
-	_build_cones()
 	_build_reopen()
 	if inst()["complications"].has("live_wire"):
 		_build_wire()
@@ -159,7 +139,7 @@ func _build_debris_zone() -> void:
 		player.drop_carried()
 		_place_in_pile(log_node)
 		Audio.play("thud", -4.0)
-		_after_progress(r)
+		_report(r)
 
 
 func _place_in_pile(log_node: Node3D) -> void:
@@ -170,57 +150,12 @@ func _place_in_pile(log_node: Node3D) -> void:
 	pile_count += 1
 
 
-func _build_cones() -> void:
-	cone_points = [
-		anchor + Vector3(-3.0, 0, -5.0), anchor + Vector3(0.0, 0, -5.5), anchor + Vector3(3.0, 0, -5.0),
-		anchor + Vector3(-3.0, 0, 5.0), anchor + Vector3(3.0, 0, 5.0),
-	]
-	for p in cone_points:
-		var c := Node3D.new()
-		c.position = p - anchor
-		add_child(c)
-		var cone_mesh := CylinderMesh.new()
-		cone_mesh.top_radius = 0.04
-		cone_mesh.bottom_radius = 0.25
-		cone_mesh.height = 0.7
-		cone_mesh.radial_segments = 8
-		var mi := MeshInstance3D.new()
-		mi.mesh = cone_mesh
-		mi.material_override = Build.mat(Color(1.0, 0.45, 0.1))
-		mi.position.y = 0.35
-		c.add_child(mi)
-		Build.cyl(c, 0.17, 0.1, Vector3(0, 0.42, 0), Build.C_CREAM, false, 8)
-		c.visible = false
-		cones.append(c)
-
-
-func show_cone(i: int) -> void:
-	if i >= 0 and i < cones.size() and not cones[i].visible:
-		cones[i].visible = true
-		Audio.play("cone", -6.0)
-
-
-func show_all_cones() -> void:
-	for i in cones.size():
-		show_cone(i)
-
-
 func _build_reopen() -> void:
-	var it := Interactable.make(self, Vector3(0, 0, -3.0), "Reopen road", 2.2)
-	it.hold = true
-	var held := [0.0]
+	var it := _hold_interaction(Vector3(0, 0, -3.0), "Hold: reopen the road", 1.2, 2.2, func() -> void:
+		hide_cones()
+		_trunk_body.queue_free()
+		_report(model.progress_task("reopen_road")))
 	it.available = func() -> bool: return model.incidents.check_task("reopen_road") == ""
-	it.prompt_fn = func() -> String: return "Hold: reopen the road"
-	it.on_press = func() -> void: held[0] = 0.0
-	it.on_hold = func(dt: float) -> void:
-		held[0] += dt
-		if held[0] >= 1.2:
-			held[0] = -100.0
-			for c in cones:
-				c.visible = false
-			_trunk_body.queue_free()
-			var r := model.progress_task("reopen_road")
-			_after_progress(r)
 
 
 func _build_wire() -> void:
@@ -249,8 +184,6 @@ func _build_wire() -> void:
 
 
 func _sync_from_model() -> void:
-	if model.incidents.is_task_done("secure_area"):
-		show_all_cones()
 	var cut := _done_indices("cut_trunk")
 	var cleared := _done_indices("clear_debris")
 	for i in n:
@@ -304,7 +237,11 @@ func _hold_cut(i: int, dt: float) -> void:
 		if r.get("warning", "") == "unsafe_cut":
 			message.emit("Scene wasn't coned off!")
 		_mark_cut(i, true)
-		_after_progress(r)
+		_report(r)
+
+
+func stop_actions() -> void:
+	_stop_cut()
 
 
 func _stop_cut() -> void:
@@ -328,13 +265,6 @@ func _mark_cut(i: int, animate: bool) -> void:
 		seg.rotation = target_rot
 
 
-func _after_progress(r: Dictionary) -> void:
-	if r.has("result"):
-		resolved.emit(r["result"])
-	elif r.get("completed", false):
-		Audio.play("chime", -10.0, 1.5)
-
-
 func _process(dt: float) -> void:
 	if stall_t > 0.0:
 		stall_t -= dt
@@ -345,6 +275,6 @@ func _process(dt: float) -> void:
 	_update_wire()
 
 
-## Bind meter 0..1 for the HUD; negative when not cutting.
-func bind_level() -> float:
-	return bind if cutting >= 0 or bind > 0.01 else -1.0
+## Chain-bind meter for the HUD; hidden when not cutting.
+func meter() -> Dictionary:
+	return {"value": bind if cutting >= 0 or bind > 0.01 else -1.0, "label": "CHAIN BIND"}
