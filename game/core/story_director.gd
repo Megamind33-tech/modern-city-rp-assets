@@ -50,6 +50,12 @@ static func condition_met(c: Dictionary, model) -> bool:
 			return last.get("location", "") == c["value"]
 		"last_flag":
 			return last.get("flags", {}).get(c["key"], false) == c["value"]
+		"last_def":
+			return last.get("def_id", "") == c["value"]
+		"active_flag":
+			return model.incidents.active.get("flags", {}).get(c["key"], false) == c["value"]
+		"active_def":
+			return model.incidents.active.get("def_id", "") == c["value"]
 		"complication":
 			return model.incidents.active.get("complications", []).has(c["id"])
 		"relationship_min":

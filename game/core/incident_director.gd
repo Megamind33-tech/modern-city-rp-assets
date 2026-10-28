@@ -22,7 +22,7 @@ func _init() -> void:
 	locations = DataDB.locations()
 
 
-func generate(def_id: String, seed_value: int, location_id: String = "") -> Dictionary:
+func generate(def_id: String, seed_value: int, location_id: String = "", model = null) -> Dictionary:
 	var def: Dictionary = defs[def_id]
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
@@ -31,6 +31,29 @@ func generate(def_id: String, seed_value: int, location_id: String = "") -> Dict
 	var loc := location_id if location_id != "" else String(options[pick])
 	var sev: Array = def["severity_range"]
 	var severity := rng.randi_range(int(sev[0]), int(sev[1]))
+	# Modifiers let earlier outcomes reshape this call (e.g. a damaged roof floods worse).
+	var loc_def: Dictionary = locations[loc]
+	var ctx := {
+		"location": loc,
+		"location_name": String(loc_def["name"]),
+		"house": String(loc_def.get("house", "")),
+		"resident": String(loc_def.get("resident", "")),
+	}
+	ctx["resident_name"] = DataDB.display_name(ctx["resident"])
+	var mod_flags := {}
+	if model != null:
+		for mod in def.get("modifiers", []):
+			var ok := true
+			for c in mod["when"]:
+				var cf: Dictionary = c.duplicate()
+				if cf.has("key"):
+					cf["key"] = String(cf["key"]).format(ctx)
+				if not StoryDirector.condition_met(cf, model):
+					ok = false
+			if ok:
+				severity = clampi(severity + int(mod.get("severity_delta", 0)), 1, 3)
+				if mod.has("flag"):
+					mod_flags[String(mod["flag"])] = true
 	var weathers: Array = def["weather_options"]
 	var weather := String(weathers[rng.randi_range(0, weathers.size() - 1)])
 	var complications: Array = []
@@ -45,7 +68,11 @@ func generate(def_id: String, seed_value: int, location_id: String = "") -> Dict
 		var required := 1
 		if t.has("count_by_severity"):
 			required = int(t["count_by_severity"][severity - 1])
+		var auto := 0.0
+		if t.has("auto_seconds_by_severity"):
+			auto = float(t["auto_seconds_by_severity"][severity - 1])
 		tasks.append({
+			"auto_seconds": auto,
 			"id": String(t["id"]),
 			"label": String(t["label"]),
 			"required": required,
@@ -57,14 +84,6 @@ func generate(def_id: String, seed_value: int, location_id: String = "") -> Dict
 			"progress_with": String(t.get("progress_with", "")),
 			"done_indices": [],
 		})
-	var loc_def: Dictionary = locations[loc]
-	var ctx := {
-		"location": loc,
-		"location_name": String(loc_def["name"]),
-		"house": String(loc_def.get("house", "")),
-		"resident": String(loc_def.get("resident", "")),
-	}
-	ctx["resident_name"] = DataDB.display_name(ctx["resident"])
 	return {
 		"uid": "",
 		"def_id": def_id,
@@ -77,7 +96,7 @@ func generate(def_id: String, seed_value: int, location_id: String = "") -> Dict
 		"state": OFFERED,
 		"elapsed": 0.0,
 		"time_limit": float(def.get("time_limit", 300)),
-		"flags": {},
+		"flags": mod_flags,
 		"outcome": "",
 		"reason": "",
 		"dispatch_mode": "",
@@ -88,13 +107,30 @@ func generate(def_id: String, seed_value: int, location_id: String = "") -> Dict
 
 
 ## Offers the next call. Prefers a different street than last time and skips roads already closed.
-func offer_next(day: int, base_seed: int, world: WorldState) -> Dictionary:
+## Authored story incidents (story: true) take priority once eligible and happen once.
+func offer_next(day: int, base_seed: int, world: WorldState, model = null) -> Dictionary:
 	if not active.is_empty():
 		return {}
+	var done_defs: Array = history.map(func(h: Dictionary) -> String: return h["def_id"])
 	var def_ids: Array = []
+	var story_ids: Array = []
 	for id in defs:
-		if int(defs[id].get("phase", 1)) <= 1:
+		var d: Dictionary = defs[id]
+		if int(d.get("phase", 1)) > 1:
+			continue
+		var eligible := true
+		for c in d.get("eligible", []):
+			if model == null or not StoryDirector.condition_met(c, model):
+				eligible = false
+		if not eligible:
+			continue
+		if d.get("story", false):
+			if not done_defs.has(id):
+				story_ids.append(id)
+		else:
 			def_ids.append(id)
+	if not story_ids.is_empty():
+		def_ids = story_ids
 	def_ids.sort()
 	if def_ids.is_empty():
 		return {}
@@ -113,7 +149,7 @@ func offer_next(day: int, base_seed: int, world: WorldState) -> Dictionary:
 	if candidates.is_empty():
 		candidates = defs[def_id]["location_options"].duplicate()
 	var loc_pick: String = candidates[rng.randi_range(0, candidates.size() - 1)]
-	var inst := generate(def_id, seed_value, loc_pick)
+	var inst := generate(def_id, seed_value, loc_pick, model)
 	inst["uid"] = "INC-%04d" % next_uid
 	inst["day"] = day
 	next_uid += 1
@@ -171,6 +207,8 @@ func check_task(task_id: String, context: Dictionary = {}) -> String:
 		var lead := find_task(t["progress_with"])
 		if not lead.is_empty() and int(t["progress"]) >= int(lead["progress"]):
 			return "First: %s" % lead["label"]
+	if float(t.get("auto_seconds", 0.0)) > 0.0 and context.get("by", "") != "auto":
+		return "In progress — %s" % String(t["label"]).to_lower()
 	if t["equipment"] != "" and not context.get("equipped", []).has(t["equipment"]):
 		return "Needs the %s from the truck" % t["equipment"]
 	return ""
@@ -267,6 +305,7 @@ func from_dict(d: Dictionary) -> void:
 			active[k] = int(active.get(k, 0))
 		for t in active["tasks"]:
 			t["required"] = int(t["required"])
+			t["auto_seconds"] = float(t.get("auto_seconds", 0.0))
 			t["progress"] = int(t["progress"])
 			var idx: Array = []
 			for i in t["done_indices"]:

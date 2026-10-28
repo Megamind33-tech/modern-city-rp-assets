@@ -10,3 +10,6 @@ build/
 *.jks
 # Logs
 logs/
+
+# Raw downloaded asset packs (provenance tracked in ASSET_MANIFEST.csv)
+tools/asset_sources/

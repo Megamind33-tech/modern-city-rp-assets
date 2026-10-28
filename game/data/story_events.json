@@ -21,7 +21,16 @@
     {
       "id": "live_wire_warning",
       "trigger": "arrive",
-      "conditions": [{"type": "complication", "id": "live_wire"}],
+      "conditions": [
+        {
+          "type": "complication",
+          "id": "live_wire"
+        },
+        {
+          "type": "active_def",
+          "value": "fallen_tree"
+        }
+      ],
       "speaker": "theo_vance",
       "lines": [
         "That's a service line tangled in the branches. It's still spitting.",
@@ -37,14 +46,31 @@
         "Scene's not coned. A kid on a bike just went under that trunk to watch you.",
         "Cones first. Always. I won't say it twice."
       ],
-      "effects": [{"type": "crew", "who": "maren_holt", "stat": "trust", "delta": -10}]
+      "effects": [
+        {
+          "type": "crew",
+          "who": "maren_holt",
+          "stat": "trust",
+          "delta": -10
+        }
+      ]
     },
     {
       "id": "rosa_thanks",
       "trigger": "returned",
       "conditions": [
-        {"type": "last_outcome", "value": "success"},
-        {"type": "last_location", "value": "alder_lane"}
+        {
+          "type": "last_outcome",
+          "value": "success"
+        },
+        {
+          "type": "last_location",
+          "value": "alder_lane"
+        },
+        {
+          "type": "last_def",
+          "value": "fallen_tree"
+        }
       ],
       "speaker": "rosa_mendes",
       "lines": [
@@ -56,36 +82,80 @@
       "id": "rosa_roof_lost",
       "trigger": "returned",
       "conditions": [
-        {"type": "last_outcome", "value": "failure"},
-        {"type": "last_location", "value": "alder_lane"}
+        {
+          "type": "last_outcome",
+          "value": "failure"
+        },
+        {
+          "type": "last_location",
+          "value": "alder_lane"
+        },
+        {
+          "type": "last_def",
+          "value": "fallen_tree"
+        }
       ],
       "speaker": "maren_holt",
       "lines": [
         "The rest of that oak came down on the Mendes roof. Nobody hurt. Rosa's furious, and she's not wrong.",
         "We can't un-drop a tree. We can patch a roof, if the budget stretches. Check the board."
       ],
-      "effects": [{"type": "crew", "who": "maren_holt", "stat": "trust", "delta": -5}]
+      "effects": [
+        {
+          "type": "crew",
+          "who": "maren_holt",
+          "stat": "trust",
+          "delta": -5
+        }
+      ]
     },
     {
       "id": "arthur_thanks",
       "trigger": "returned",
       "conditions": [
-        {"type": "last_outcome", "value": "success"},
-        {"type": "last_location", "value": "mill_road"}
+        {
+          "type": "last_outcome",
+          "value": "success"
+        },
+        {
+          "type": "last_location",
+          "value": "mill_road"
+        },
+        {
+          "type": "last_def",
+          "value": "fallen_tree"
+        }
       ],
       "speaker": "arthur_penhallow",
       "lines": [
         "Arthur Penhallow insisted on playing the crew a thank-you on his trombone. From the end of his drive. At volume.",
         "Theo says it was 'Abide With Me'. Maren says it was a war crime. Either way, he waved until you were out of sight."
       ],
-      "effects": [{"type": "crew", "who": "theo_vance", "stat": "morale", "delta": 5}]
+      "effects": [
+        {
+          "type": "crew",
+          "who": "theo_vance",
+          "stat": "morale",
+          "delta": 5
+        }
+      ]
     },
     {
       "id": "arthur_roof_lost",
       "trigger": "returned",
       "conditions": [
-        {"type": "last_outcome", "value": "failure"},
-        {"type": "last_location", "value": "mill_road"}
+        {
+          "type": "last_outcome",
+          "value": "failure"
+        },
+        {
+          "type": "last_location",
+          "value": "mill_road"
+        },
+        {
+          "type": "last_def",
+          "value": "fallen_tree"
+        }
       ],
       "speaker": "theo_vance",
       "lines": [
@@ -96,9 +166,20 @@
       "id": "safe_scene_praise",
       "trigger": "returned",
       "conditions": [
-        {"type": "last_outcome", "value": "success"},
-        {"type": "last_flag", "key": "secured", "value": true},
-        {"type": "last_flag", "key": "unsafe_cut", "value": false}
+        {
+          "type": "last_outcome",
+          "value": "success"
+        },
+        {
+          "type": "last_flag",
+          "key": "secured",
+          "value": true
+        },
+        {
+          "type": "last_flag",
+          "key": "unsafe_cut",
+          "value": false
+        }
       ],
       "repeatable": false,
       "speaker": "maren_holt",
@@ -106,26 +187,55 @@
         "Clean scene. Cones out before the saw. That's how my old guv'nor did it.",
         "Maybe you'll do."
       ],
-      "effects": [{"type": "crew", "who": "maren_holt", "stat": "trust", "delta": 10}]
+      "effects": [
+        {
+          "type": "crew",
+          "who": "maren_holt",
+          "stat": "trust",
+          "delta": 10
+        }
+      ]
     },
     {
       "id": "rosa_pastries",
       "trigger": "day_start",
-      "conditions": [{"type": "flag", "key": "helped_rosa_mendes", "value": true}],
+      "conditions": [
+        {
+          "type": "flag",
+          "key": "helped_rosa_mendes",
+          "value": true
+        }
+      ],
       "speaker": "theo_vance",
       "lines": [
         "Someone left a tin of pão de queijo on the bay door. Note says: 'For the crew who didn't make my grandson miss his recital. — R.M.'",
         "I've eaten four. For quality control."
       ],
       "effects": [
-        {"type": "crew", "who": "theo_vance", "stat": "morale", "delta": 5},
-        {"type": "crew", "who": "maren_holt", "stat": "morale", "delta": 5}
+        {
+          "type": "crew",
+          "who": "theo_vance",
+          "stat": "morale",
+          "delta": 5
+        },
+        {
+          "type": "crew",
+          "who": "maren_holt",
+          "stat": "morale",
+          "delta": 5
+        }
       ]
     },
     {
       "id": "tarp_on_alder",
       "trigger": "day_start",
-      "conditions": [{"type": "world", "key": "house_mendes.roof", "value": "damaged"}],
+      "conditions": [
+        {
+          "type": "world",
+          "key": "house_mendes.roof",
+          "value": "damaged"
+        }
+      ],
       "repeatable": false,
       "speaker": "theo_vance",
       "lines": [
@@ -136,7 +246,13 @@
     {
       "id": "roof_patched_rosa",
       "trigger": "project_done",
-      "conditions": [{"type": "flag", "key": "roof_patched_house_mendes", "value": true}],
+      "conditions": [
+        {
+          "type": "flag",
+          "key": "roof_patched_house_mendes",
+          "value": true
+        }
+      ],
       "speaker": "rosa_mendes",
       "lines": [
         "\"You didn't have to do that.\" Rosa hands Maren a coffee she didn't ask for.",
@@ -147,15 +263,97 @@
       "id": "drilled_oak",
       "trigger": "day_start",
       "conditions": [
-        {"type": "day_min", "value": 3},
-        {"type": "flag_any_prefix", "key": "helped_"}
+        {
+          "type": "day_min",
+          "value": 3
+        },
+        {
+          "type": "flag_any_prefix",
+          "key": "helped_"
+        }
       ],
       "speaker": "priya_nair",
       "lines": [
         "Had a look at the rings on those logs we stacked. Rot line, sure. But there's a clean drill hole going right into it.",
         "Trees don't drill themselves. Somebody wanted that one down."
       ],
-      "effects": [{"type": "flag", "key": "mystery_drilled_tree", "value": true}]
+      "effects": [
+        {
+          "type": "flag",
+          "key": "mystery_drilled_tree",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "roof_leak_flood",
+      "trigger": "arrive",
+      "conditions": [
+        {
+          "type": "active_flag",
+          "key": "roof_leak",
+          "value": true
+        }
+      ],
+      "speaker": "rosa_mendes",
+      "lines": [
+        "\"It's coming in through that tarp as well as the drains. The ceiling's dripping into the cellar.\"",
+        "She doesn't say it was your tree. She doesn't have to."
+      ]
+    },
+    {
+      "id": "tomas_torch",
+      "trigger": "arrive",
+      "conditions": [
+        {
+          "type": "active_flag",
+          "key": "tomas_helps",
+          "value": true
+        }
+      ],
+      "speaker": "tomas_mendes",
+      "lines": [
+        "Tomás is at the cellar door in wellies, holding a torch like it's a lightsaber.",
+        "\"Nan says I can help if I stay on the steps. I'll hold the light. You moved the whole tree, so this is easy for you.\""
+      ]
+    },
+    {
+      "id": "cellar_saved",
+      "trigger": "returned",
+      "conditions": [
+        {
+          "type": "last_outcome",
+          "value": "success"
+        },
+        {
+          "type": "last_def",
+          "value": "flooded_cellar"
+        }
+      ],
+      "speaker": "rosa_mendes",
+      "lines": [
+        "\"Boiler's fine. Fuse box is fine. Tomás has decided he's joining the fire service.\"",
+        "\"I've told him he needs to finish Year Five first.\""
+      ]
+    },
+    {
+      "id": "cellar_lost",
+      "trigger": "returned",
+      "conditions": [
+        {
+          "type": "last_outcome",
+          "value": "failure"
+        },
+        {
+          "type": "last_def",
+          "value": "flooded_cellar"
+        }
+      ],
+      "speaker": "maren_holt",
+      "lines": [
+        "Mendes boiler's gone. They'll be cold for a week while the insurance argues.",
+        "That family's had a rough month, and some of it's on us. Remember that next time the call comes in."
+      ]
     }
   ]
 }

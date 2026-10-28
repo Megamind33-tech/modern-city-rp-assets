@@ -134,6 +134,186 @@
           "value": true
         }
       ]
+    },
+    {
+      "id": "flooded_cellar",
+      "category": "flooding",
+      "phase": 1,
+      "story": true,
+      "eligible": [
+        {
+          "type": "day_min",
+          "value": 2
+        }
+      ],
+      "title": "Water in the {resident_name} cellar",
+      "briefing": "{resident_name} says the storm drains on {location_name} have backed up and water is pouring into her cellar. The boiler and fuse box are down there.",
+      "site": "flooded_cellar",
+      "location_options": [
+        "alder_lane"
+      ],
+      "severity_range": [
+        1,
+        2
+      ],
+      "weather_options": [
+        "heavy_rain",
+        "gusty_rain"
+      ],
+      "time_limit": 300,
+      "base_reward": 420,
+      "fuel_cost": 40,
+      "complications": [
+        {
+          "id": "live_wire",
+          "label": "Water is near the fuse box",
+          "chance": 1.0,
+          "min_severity": 1
+        }
+      ],
+      "modifiers": [
+        {
+          "when": [
+            {
+              "type": "world",
+              "key": "{house}.roof",
+              "value": "damaged"
+            }
+          ],
+          "severity_delta": 1,
+          "flag": "roof_leak"
+        },
+        {
+          "when": [
+            {
+              "type": "flag",
+              "key": "helped_{resident}",
+              "value": true
+            }
+          ],
+          "flag": "tomas_helps"
+        }
+      ],
+      "tasks": [
+        {
+          "id": "secure_area",
+          "label": "Cone off the scene",
+          "optional": true,
+          "delegatable": true
+        },
+        {
+          "id": "isolate_power",
+          "label": "Radio the utility to cut the house supply",
+          "requires_complication": "live_wire"
+        },
+        {
+          "id": "place_pump",
+          "label": "Carry the pump to the cellar steps"
+        },
+        {
+          "id": "lay_hose",
+          "label": "Couple the hose to the drain",
+          "count_by_severity": [
+            2,
+            3,
+            3
+          ],
+          "after": [
+            "place_pump"
+          ]
+        },
+        {
+          "id": "clear_drain",
+          "label": "Clear the blocked drain",
+          "count_by_severity": [
+            2,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "prime_pump",
+          "label": "Prime and start the pump",
+          "count_by_severity": [
+            3,
+            3,
+            3
+          ],
+          "after": [
+            "isolate_power",
+            "lay_hose",
+            "clear_drain"
+          ]
+        },
+        {
+          "id": "pump_out",
+          "label": "Pump the cellar dry",
+          "auto_seconds_by_severity": [
+            30,
+            40,
+            50
+          ],
+          "after": [
+            "prime_pump"
+          ]
+        },
+        {
+          "id": "make_safe",
+          "label": "Check the cellar is safe",
+          "after": [
+            "pump_out"
+          ]
+        }
+      ],
+      "success_effects": [
+        {
+          "type": "world",
+          "key": "{house}.cellar",
+          "value": "dry"
+        },
+        {
+          "type": "relationship",
+          "who": "{resident}",
+          "delta": 15
+        },
+        {
+          "type": "relationship",
+          "who": "tomas_mendes",
+          "delta": 10
+        },
+        {
+          "type": "memory",
+          "who": "{resident}",
+          "memory": "cellar_saved"
+        },
+        {
+          "type": "flag",
+          "key": "cellar_saved_{resident}",
+          "value": true
+        }
+      ],
+      "failure_effects": [
+        {
+          "type": "world",
+          "key": "{house}.cellar",
+          "value": "flooded"
+        },
+        {
+          "type": "relationship",
+          "who": "{resident}",
+          "delta": -8
+        },
+        {
+          "type": "memory",
+          "who": "{resident}",
+          "memory": "cellar_lost"
+        },
+        {
+          "type": "flag",
+          "key": "cellar_lost_{resident}",
+          "value": true
+        }
+      ]
     }
   ]
 }

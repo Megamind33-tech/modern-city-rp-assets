@@ -38,7 +38,7 @@ func new_game(seed_value: int) -> void:
 # --- Incident flow -----------------------------------------------------------
 
 func offer_incident() -> Dictionary:
-	return incidents.offer_next(day, base_seed, world)
+	return incidents.offer_next(day, base_seed, world, self)
 
 
 func dispatch(mode: String) -> Dictionary:
@@ -79,6 +79,16 @@ func request_isolation() -> Dictionary:
 	return {"ok": true, "reason": ""}
 
 
+## 0..1 progress of a timed task (for HUD/visuals).
+func auto_fraction(task_id: String) -> float:
+	var t := incidents.find_task(task_id)
+	if t.is_empty() or float(t.get("auto_seconds", 0.0)) <= 0.0:
+		return 0.0
+	if incidents.is_task_done(task_id):
+		return 1.0
+	return clampf(float(incidents.active["flags"].get("auto_" + task_id, 0.0)) / float(t["auto_seconds"]), 0.0, 1.0)
+
+
 func isolation_pending() -> bool:
 	var f: Dictionary = incidents.active.get("flags", {})
 	return f.has("isolation_eta") and not incidents.is_task_done("isolate_power")
@@ -91,6 +101,17 @@ func tick(dt: float) -> void:
 	var timeout := incidents.tick(dt)
 	if isolation_pending() and float(inst["elapsed"]) >= float(inst["flags"]["isolation_eta"]):
 		incidents.add_progress("isolate_power", {"by": "utility"})
+	# Timed tasks (e.g. pumping) run on their own once their prerequisites are met.
+	for t in inst["tasks"]:
+		if float(t.get("auto_seconds", 0.0)) <= 0.0 or incidents.check_task(t["id"], {"by": "auto"}) != "":
+			continue
+		var key: String = "auto_" + t["id"]
+		var rate := 1.25 if inst["flags"].get("tomas_helps", false) else 1.0
+		inst["flags"][key] = float(inst["flags"].get(key, 0.0)) + dt * rate
+		if float(inst["flags"][key]) >= float(t["auto_seconds"]):
+			var r := progress_task(t["id"], {"by": "auto"})
+			if r.has("result"):
+				return
 	if timeout == "timeout":
 		resolve("failure", "timeout")
 

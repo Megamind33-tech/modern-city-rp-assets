@@ -163,12 +163,97 @@ func test_timeout_fails_and_damage_persists_overnight() -> void:
 	runner.eq(m.world.get_value("%s.roof" % house), "damaged", "roof stays damaged until repaired")
 
 
-func test_next_call_prefers_another_street() -> void:
+func test_next_tree_call_prefers_another_street() -> void:
 	var m := _model(9)
 	var first := _on_scene(m)
 	m.abandon()
 	m.return_to_station()
-	m.end_shift()
-	var second := m.offer_incident()
-	runner.check(second["location"] != first["location"], "second call on a different street")
+	# Ask the director directly for a routine call (bypasses day-2 story incidents).
+	var second := m.incidents.offer_next(m.day, m.base_seed, m.world)
+	runner.check(second["location"] != first["location"], "second tree call on a different street")
 	runner.check(second["uid"] != first["uid"], "unique incident ids")
+
+
+func _flood(m: GameModel) -> Dictionary:
+	var inst := m.offer_incident()
+	m.dispatch("quick")
+	m.arrive()
+	return inst
+
+
+func test_flood_is_day_two_story_incident_once() -> void:
+	var m := _model(9)
+	_on_scene(m)
+	m.abandon()
+	m.return_to_station()
+	m.end_shift()
+	var inst := _flood(m)
+	runner.eq(inst["def_id"], "flooded_cellar", "day-2 call is the Mendes cellar")
+	runner.eq(inst["location"], "alder_lane", "at Rosa's")
+	runner.check(inst["complications"].has("live_wire"), "fuse box hazard always present")
+	m.abandon()
+	m.return_to_station()
+	m.end_shift()
+	runner.eq(m.offer_incident()["def_id"], "fallen_tree", "story incident happens once")
+
+
+func test_earlier_outcomes_reshape_flood() -> void:
+	var base := _model(5)
+	base.day = 2
+	var plain := base.incidents.generate("flooded_cellar", 77, "", base)
+	runner.check(not plain["flags"].get("roof_leak", false), "no leak with intact roof")
+	runner.check(not plain["flags"].get("tomas_helps", false), "no helper without history")
+	var m := _model(5)
+	m.world.set_value("house_mendes.roof", "damaged")
+	m.flags["helped_rosa_mendes"] = true
+	var hit := m.incidents.generate("flooded_cellar", 77, "", m)
+	runner.check(hit["flags"].get("roof_leak", false), "damaged roof leaks into the cellar")
+	runner.eq(int(hit["severity"]), mini(int(plain["severity"]) + 1, 3), "damaged roof raises severity")
+	runner.check(hit["flags"].get("tomas_helps", false), "Tomás helps the crew that helped Rosa")
+
+
+func _run_flood_to_pumping(m: GameModel) -> Dictionary:
+	var inst := m.incidents.active
+	runner.eq(m.progress_task("prime_pump")["reason"], "First: Radio the utility to cut the house supply", "power first")
+	m.request_isolation()
+	m.tick(GameModel.ISOLATION_DELAY + 0.1)
+	runner.check(m.progress_task("lay_hose")["reason"].begins_with("First"), "hose needs the pump placed")
+	runner.check(m.progress_task("place_pump")["ok"], "pump placed")
+	for i in int(m.incidents.find_task("lay_hose")["required"]):
+		runner.check(m.progress_task("lay_hose", {"index": i})["ok"], "hose %d" % i)
+	for i in int(m.incidents.find_task("clear_drain")["required"]):
+		runner.check(m.progress_task("clear_drain", {"index": i})["ok"], "drain %d" % i)
+	for i in 3:
+		runner.check(m.progress_task("prime_pump")["ok"], "pull %d" % i)
+	return inst
+
+
+func test_flood_flow_and_timed_pumping() -> void:
+	var m := _model(5)
+	m.day = 2
+	_flood(m)
+	_run_flood_to_pumping(m)
+	var need: float = m.incidents.find_task("pump_out")["auto_seconds"]
+	runner.eq(m.progress_task("pump_out")["reason"], "In progress — pump the cellar dry", "pumping can't be skipped by hand")
+	runner.eq(m.progress_task("make_safe")["reason"], "First: Pump the cellar dry", "can't sign off a wet cellar")
+	m.tick(need * 0.5)
+	runner.check(absf(m.auto_fraction("pump_out") - 0.5) < 0.05, "pumping half way")
+	m.tick(need * 0.6)
+	runner.check(m.incidents.is_task_done("pump_out"), "cellar pumped dry")
+	var r := m.progress_task("make_safe")
+	runner.eq(r.get("result", {}).get("outcome", ""), "success", "flood resolved")
+	runner.eq(m.world.get_value("house_mendes.cellar"), "dry", "cellar state recorded")
+	m.return_to_station()
+	runner.check(m.story.fired.has("cellar_saved"), "Rosa reacts to the saved cellar")
+
+
+func test_tomas_speeds_pumping() -> void:
+	var m := _model(5)
+	m.day = 2
+	m.flags["helped_rosa_mendes"] = true
+	_flood(m)
+	_run_flood_to_pumping(m)
+	var need: float = m.incidents.find_task("pump_out")["auto_seconds"]
+	m.tick(need * 0.85)
+	runner.check(m.incidents.is_task_done("pump_out"), "faster with Tomás holding the torch")
+	runner.check(m.story.fired.has("tomas_torch"), "Tomás remembers the tree rescue")
