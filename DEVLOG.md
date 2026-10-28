@@ -44,3 +44,10 @@ Newest entries at the bottom. Each entry: what changed, why, evidence.
 - The asset hand delivered Batch A through the Blender 5.2 pipeline: station hall, 4 house variants (+ damage/patch overlays authored on the shared roof slope), 3 tree types, bush, cone, chainsaw, log section, root plate, canopy, log pile, rescue truck with separate light-bar nodes. 24.3k tris total, all within budget. Contact sheet: `docs/asset_renders/A.png`.
 - Every glb imports onto the two shared materials `palette.tres` / `palette_emissive.tres`, so `AssetLib` no longer overrides materials.
 - Town, truck, chainsaw, cones and tree-incident props now load art by id; houses rotate to face their street; primitives remain as fallback (`-- --no-art` for A/B perf comparisons).
+
+## Day 1 · 13:15 — Emulator attempt, first in-game art review
+- Installed the Android emulator; `emulator -accel-check` → "KVM requires a CPU that supports vmx or svm". The container CPU exposes no virtualisation, so no Android image can boot here. Device testing needs a physical phone or a device farm (RISKS R1).
+- Full three-day run with Batch A art on the **Forward Mobile** renderer (lavapipe software Vulkan): PASS, 62 checks. Screenshots in `docs/screenshots/` (01–18).
+- Art cut on-scene draw calls 267 → 155 and station 142 → 88 (fewer, merged meshes). On-scene primitives rose 20k → 71k: still well under the 150k budget.
+- Review fixes: lane houses moved back 1 m so the deeper house models don't crowd the log-pile verge; Theo's "Saw's all yours" line now only plays at tree incidents.
+- Still placeholder: characters (capsules) until Batch B lands; ground and roads are flat palette-coloured primitives.

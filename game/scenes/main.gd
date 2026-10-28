@@ -414,7 +414,8 @@ func _on_theo_done(task: String) -> void:
 		return
 	var r := model.progress_task("secure_area", {"by": "theo_vance"})
 	if r["ok"]:
-		hud.show_toast("Theo: \"Scene's coned. Saw's all yours.\"")
+		var line := "Saw's all yours." if model.incidents.active.get("def_id", "") == "fallen_tree" else "Nobody's wandering in now."
+		hud.show_toast("Theo: \"Scene's coned. %s\"" % line)
 
 
 # --- HUD & input ------------------------------------------------------------
